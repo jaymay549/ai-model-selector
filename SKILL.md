@@ -1,6 +1,6 @@
 ---
 name: ai-model-selector
-description: "Use when selecting AI models, configuring API parameters, or implementing LLM calls. Covers OpenAI (GPT-4.1, GPT-5, o3), Anthropic (Claude 4.5), Google (Gemini 2.5), DeepSeek (V3, R1), and embedding models with specs, gotchas, and code templates."
+description: "Use when selecting AI models, configuring API parameters, or implementing LLM calls. Covers OpenAI, Anthropic, Google, DeepSeek, and embedding models with specs, gotchas, and code templates."
 version: 1.0.0
 license: MIT
 author: Jason
