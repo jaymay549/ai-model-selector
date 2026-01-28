@@ -2,327 +2,212 @@
 
 ## Model Recommendations
 
-| Task | Best Choice | Alternative | Budget |
-|------|-------------|-------------|--------|
-| **Math competitions** | o3 | o4-mini | DeepSeek R1 |
-| **Scientific analysis** | o3 | Claude Opus 4.5 | Gemini 2.5 Pro |
-| **Logic puzzles** | o3 | Claude + thinking | DeepSeek R1 |
-| **Multi-step planning** | Claude Opus 4.5 | GPT-5 | DeepSeek R1 |
-| **Research synthesis** | Claude Opus 4.5 | Gemini 2.5 Pro | DeepSeek V3 |
-| **Legal reasoning** | Claude Opus 4.5 | o3 | GPT-4.1 |
+### Math & Quantitative Reasoning
+**Top Picks**:
+1. GPT-5.2 (xhigh effort) - 100% on AIME 2025
+2. GPT-5.2 Pro - Maximum reasoning capability
+3. o3 - Optimized for math/science
 
-## Reasoning Model Comparison
+| Model | AIME 2025 | Best For |
+|-------|-----------|----------|
+| GPT-5.2 (xhigh) | 100% | Complex math |
+| o3 | 90%+ | Fast math reasoning |
+| DeepSeek-R1 | 79.8% | Budget math |
+| Claude Opus 4.5 | High 80s% | Multi-step reasoning |
 
-| Model | AIME 2025 | GPQA | Math | Approach |
-|-------|-----------|------|------|----------|
-| **o3** | ~90% | 87.7% | 96.7% | Hidden CoT |
-| **o4-mini** | 93.4% | - | - | Hidden CoT |
-| **Claude Opus 4.5** | - | - | - | Extended thinking |
-| **DeepSeek R1** | 79.8% | 71.5% | 97.3% | Visible CoT |
-| **Gemini 2.5 Pro** | - | - | - | Thinking mode |
+### Scientific Reasoning
+**Top Pick**: GPT-5.2 or Claude Opus 4.5
 
-## Configuration Patterns
+| Model | GPQA Diamond | Best For |
+|-------|--------------|----------|
+| GPT-5.2 | ~92-93% | Hard science questions |
+| Claude Opus 4.5 | ~85%+ | Research synthesis |
+| Gemini 2.5 Pro | ~80%+ | Scientific analysis |
 
-### OpenAI Reasoning Models (o3, o4-mini)
+### Multi-Step Planning & Analysis
+**Top Pick**: Claude Opus 4.5 with extended thinking
 
-```python
-from openai import OpenAI
+Opus 4.5 excels at sustained reasoning over many steps.
 
-client = OpenAI()
+### Budget Reasoning
+**Top Pick**: DeepSeek-reasoner
 
-# ⚠️ CRITICAL: No temperature, use reasoning effort
-response = client.responses.create(
-    model="o3",
-    reasoning={"effort": "high"},  # low, medium, high
-    input=[
-        {"role": "user", "content": "Prove that √2 is irrational"}
-    ]
-)
+Visible chain-of-thought at $0.28/$0.42 per 1M tokens.
 
-print(response.output_text)
+---
 
-# Check reasoning token usage
-print(f"Reasoning tokens: {response.usage.reasoning_tokens}")
-print(f"Output tokens: {response.usage.completion_tokens}")
+## Configuration for Reasoning
+
+### GPT-5.2 Reasoning Effort
+```javascript
+// Maximum reasoning for hard problems
+const response = await fetch("https://api.openai.com/v1/responses", {
+  body: JSON.stringify({
+    model: "gpt-5.2",
+    reasoning: { effort: "xhigh" },  // Maximum thinking
+    input: [{
+      role: "user",
+      content: "Prove that there are infinitely many primes..."
+    }]
+  })
+});
+
+// For simpler problems, use lower effort
+{
+  reasoning: { effort: "medium" }  // Saves tokens
+}
 ```
 
 ### Claude Extended Thinking
-
-```python
-import anthropic
-
-client = anthropic.Anthropic()
-
-response = client.messages.create(
-    model="claude-opus-4-5-20251101",
-    max_tokens=16000,
-    thinking={
-        "type": "enabled",
-        "budget_tokens": 20000  # Allow extensive reasoning
-    },
-    messages=[{
-        "role": "user",
-        "content": "Analyze the implications of Gödel's incompleteness theorems"
-    }]
-)
-
-# Access both thinking and response
-for block in response.content:
-    if block.type == "thinking":
-        print(f"THINKING:\n{block.thinking}\n")
-    elif block.type == "text":
-        print(f"RESPONSE:\n{block.text}")
+```javascript
+const response = await anthropic.messages.create({
+  model: "claude-opus-4-5-20251101",
+  max_tokens: 32000,
+  thinking: {
+    type: "enabled",
+    budget_tokens: 20000  // More budget for hard problems
+  },
+  messages: [{
+    role: "user",
+    content: "Analyze this complex scenario..."
+  }]
+});
 ```
 
-### DeepSeek R1
+### DeepSeek Reasoning Mode
+```javascript
+const response = await client.chat.completions.create({
+  model: "deepseek-reasoner",  // Thinking mode
+  messages: [{
+    role: "user",
+    content: "Solve step by step: ..."
+  }],
+  max_tokens: 8000
+});
 
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    api_key="DEEPSEEK_KEY",
-    base_url="https://api.deepseek.com"
-)
-
-response = client.chat.completions.create(
-    model="deepseek-reasoner",
-    messages=[{
-        "role": "user",
-        "content": "Solve: Find all integer solutions to x³ + y³ = z³"
-    }],
-    max_tokens=16000,  # R1 needs space for CoT
-    stream=True
-)
-
-# Reasoning is visible in response
-for chunk in response:
-    if chunk.choices[0].delta.content:
-        print(chunk.choices[0].delta.content, end="")
+// Response includes visible CoT reasoning
 ```
 
 ### Gemini Thinking Mode
-
-```python
-import google.generativeai as genai
-
-model = genai.GenerativeModel(
-    model_name="gemini-2.5-pro",
-    generation_config={
-        "thinking_config": {
-            "thinking_budget": 20000
-        }
+```javascript
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.5-pro",
+  generationConfig: {
+    thinkingConfig: {
+      thinkingBudget: 15000
     }
-)
-
-response = model.generate_content(
-    "Derive the Schwarzschild metric from first principles"
-)
+  }
+});
 ```
 
-## Prompting for Reasoning
+---
 
-### 1. Explicit Step-by-Step
+## Prompting Patterns for Reasoning
 
-```python
-MATH_PROMPT = """Solve this problem step by step.
+### Step-by-Step Reasoning
+```
+Solve this problem step by step. Show your work clearly.
 
-Problem: {problem}
+Before giving your final answer:
+1. Identify what type of problem this is
+2. List the relevant information
+3. Work through each step
+4. Verify your answer
 
-Instructions:
-1. First, identify what we're solving for
-2. List all given information
-3. Determine which formulas/theorems apply
-4. Show each calculation step
-5. Verify your answer
-
-Show all work."""
+Problem: [your problem here]
 ```
 
-### 2. Encourage Self-Verification
+### Self-Verification
+```
+Solve this problem, then verify your solution by:
+1. Checking your arithmetic
+2. Substituting your answer back
+3. Considering edge cases
+4. Looking for alternative approaches
 
-```python
-VERIFY_PROMPT = """Solve this problem, then verify your solution.
-
-Problem: {problem}
-
-After solving:
-- Check your answer by substituting back
-- Consider edge cases
-- Identify any assumptions made
-- Rate your confidence (1-10)"""
+Problem: [your problem here]
 ```
 
-### 3. Multi-Perspective Analysis
+### Multi-Perspective Analysis
+```
+Analyze this from multiple perspectives:
 
-```python
-ANALYSIS_PROMPT = """Analyze this from multiple perspectives:
+1. First, consider the obvious interpretation
+2. Then, consider alternative interpretations
+3. Identify potential flaws in each approach
+4. Synthesize into a final conclusion
 
-Topic: {topic}
-
-Consider:
-1. Historical context
-2. Current state of knowledge
-3. Competing theories/viewpoints
-4. Evidence for and against
-5. Implications and predictions
-6. Areas of uncertainty
-
-Synthesize into a balanced conclusion."""
+Topic: [your topic here]
 ```
 
-## Task-Specific Configurations
+---
 
-### Mathematical Proofs
+## Cost Comparison for Reasoning
 
-```python
-config_proof = {
-    "model": "o3",
-    "reasoning": {"effort": "high"},
-    # Proofs need maximum reasoning
-}
+| Model | Input | Output | Notes |
+|-------|-------|--------|-------|
+| GPT-5.2 | $1.75 | $14.00 | Best benchmark scores |
+| GPT-5.2 Pro | $21.00 | $168.00 | Maximum capability |
+| Claude Opus 4.5 | $5.00 | $25.00 | Best multi-step |
+| Gemini 2.5 Pro | $1.25 | $10.00 | Good value |
+| DeepSeek-reasoner | $0.28 | $0.42 | Budget champion |
 
-# Or with Claude
-config_proof_claude = {
-    "model": "claude-opus-4-5-20251101",
-    "thinking": {
-        "type": "enabled",
-        "budget_tokens": 30000  # Proofs need extensive thinking
-    },
-    "max_tokens": 8000
-}
-```
+**Note**: Extended thinking/reasoning tokens count toward output costs.
 
-### Scientific Analysis
+---
 
-```python
-config_science = {
-    "model": "claude-opus-4-5-20251101",
-    "max_tokens": 16000,
-    "thinking": {"type": "enabled", "budget_tokens": 15000},
-    "temperature": 0.3  # Slight variation for hypothesis generation
+## Reasoning Task Routing
+
+```javascript
+function selectReasoningModel(task) {
+  if (task.type === 'math' && task.difficulty === 'competition') {
+    return { model: 'gpt-5.2', reasoning: { effort: 'xhigh' } };
+  }
+  
+  if (task.type === 'math' && task.difficulty === 'standard') {
+    return { model: 'gpt-5.2', reasoning: { effort: 'high' } };
+  }
+  
+  if (task.type === 'multi-step-planning') {
+    return { 
+      model: 'claude-opus-4-5-20251101',
+      thinking: { type: 'enabled', budget_tokens: 15000 }
+    };
+  }
+  
+  if (task.budget === 'low') {
+    return { model: 'deepseek-reasoner' };
+  }
+  
+  // Default: good balance
+  return { model: 'gpt-5.2', reasoning: { effort: 'medium' } };
 }
 ```
 
-### Strategic Planning
+---
 
-```python
-config_planning = {
-    "model": "claude-opus-4-5-20251101",
-    "max_tokens": 12000,
-    "effort": "high",  # Opus 4.5 effort parameter
-}
+## When NOT to Use Heavy Reasoning
 
-PLANNING_PROMPT = """Create a comprehensive plan for: {goal}
+Save tokens by using lower reasoning effort for:
+- Simple factual questions
+- Basic classification
+- Straightforward summaries
+- Chat/conversation
 
-Structure:
-1. Goal clarification and success metrics
-2. Constraint analysis
-3. Option generation (at least 3 approaches)
-4. Risk assessment for each option
-5. Recommended approach with rationale
-6. Implementation timeline
-7. Contingency plans"""
-```
-
-## Cost vs Quality Tradeoffs
-
-### High-Stakes (use best models)
-- Mathematical proofs
-- Legal analysis
-- Medical reasoning
-- Financial modeling
-
-```python
-HIGH_STAKES = {
-    "primary": "o3",
-    "alternative": "claude-opus-4-5-20251101",
-    "reasoning_effort": "high"
+```javascript
+// Don't waste tokens on simple questions
+{
+  model: "gpt-5.2",
+  reasoning: { effort: "none" }  // Fast mode
 }
 ```
 
-### Medium Complexity (balanced)
-- Research summaries
-- Technical analysis
-- Strategic planning
+---
 
-```python
-MEDIUM = {
-    "primary": "claude-sonnet-4-5-20250929",
-    "alternative": "gpt-5",
-    "thinking_budget": 10000
-}
-```
+## Best Practices
 
-### High Volume (cost-efficient)
-- Batch analysis
-- Initial screening
-- Simple logical tasks
-
-```python
-VOLUME = {
-    "primary": "deepseek-r1",  # Very cheap
-    "alternative": "o4-mini",
-    "fallback": "claude-haiku-4-5-20251001"
-}
-```
-
-## Handling Reasoning Failures
-
-### 1. Retry with Higher Effort
-
-```python
-def reason_with_retry(prompt, max_attempts=3):
-    efforts = ["medium", "high", "high"]
-    
-    for i, effort in enumerate(efforts):
-        response = client.responses.create(
-            model="o3",
-            reasoning={"effort": effort},
-            input=[{"role": "user", "content": prompt}]
-        )
-        
-        if validate_reasoning(response.output_text):
-            return response
-    
-    return None
-```
-
-### 2. Switch Models
-
-```python
-def reason_with_fallback(prompt):
-    # Try o3 first
-    response = try_model("o3", prompt)
-    if validate(response):
-        return response
-    
-    # Fall back to Claude with thinking
-    response = try_model("claude-opus-4-5", prompt, thinking=True)
-    if validate(response):
-        return response
-    
-    # Last resort: DeepSeek R1 (visible reasoning for debugging)
-    return try_model("deepseek-r1", prompt)
-```
-
-### 3. Decompose Complex Problems
-
-```python
-def solve_complex(problem):
-    # Break into subproblems
-    decomposition = llm.chat("Break this into simpler subproblems:\n" + problem)
-    
-    subproblems = parse_subproblems(decomposition)
-    solutions = []
-    
-    for sub in subproblems:
-        solution = llm.chat(f"Solve: {sub}", thinking=True)
-        solutions.append(solution)
-    
-    # Synthesize
-    final = llm.chat(
-        f"Combine these solutions into a final answer:\n{solutions}"
-    )
-    
-    return final
-```
+1. **Start with medium effort**, increase if needed
+2. **Set thinking budgets** appropriately - don't over-allocate
+3. **Use visible reasoning** (DeepSeek) to debug model thinking
+4. **Verify outputs** for math - even best models make errors
+5. **Consider cost** - xhigh effort costs significantly more tokens

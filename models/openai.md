@@ -1,209 +1,206 @@
-# OpenAI Models Reference
+# OpenAI Models
 
-> Last verified: January 2026
+## GPT-5.2 Family (December 2025 - Current Flagship)
 
-## Model Overview
+### GPT-5.2
+**Model String**: `gpt-5.2`
+- **Context Window**: 400,000 tokens
+- **Max Output**: 128,000 tokens
+- **Knowledge Cutoff**: August 31, 2025
+- **Pricing**: $1.75 / $14.00 per 1M tokens (input/output)
+- **Cached Input**: $0.175 per 1M (90% discount)
+- **Reasoning Effort**: `none` (default), `low`, `medium`, `high`, `xhigh`
 
-| Model | Context | Max Output | Temperature | Vision | Tool Use | Best For |
-|-------|---------|------------|-------------|--------|----------|----------|
-| **GPT-4.1** | 1M | 32K | ✅ 0-2 | ✅ | ✅ | General, long context |
-| **GPT-4.1-mini** | 1M | 32K | ✅ 0-2 | ✅ | ✅ | Fast general use |
-| **GPT-4.1-nano** | 1M | 32K | ✅ 0-2 | ✅ | ✅ | High throughput |
-| **GPT-4o** | 128K | 16K | ✅ 0-2 | ✅ | ✅ | Multimodal |
-| **GPT-4o-mini** | 128K | 16K | ✅ 0-2 | ✅ | ✅ | Budget multimodal |
-| **o3** | 200K | 100K | ❌ | ✅ | ✅ | Complex reasoning |
-| **o4-mini** | 128K | 100K | ❌ | ✅ | ✅ | Fast reasoning |
-| **o3-mini** | 200K | 100K | ❌ | ❌ | ✅ | Budget reasoning |
-| **o1** | 200K | 100K | ✅ | ✅ | ✅ | Previous reasoning |
-| **GPT-5** | 196K | 100K | ❌ | ✅ | ✅ | Frontier reasoning |
-| **GPT-5-mini** | - | - | ❌ | ✅ | ✅ | Fast frontier |
+Best for: Complex reasoning, coding, agentic tasks, long-context analysis
 
-## Model String Reference
+### GPT-5.2 Pro
+**Model String**: `gpt-5.2-pro`
+- **Context Window**: 400,000 tokens
+- **Max Output**: 128,000 tokens
+- **Pricing**: $21.00 / $168.00 per 1M tokens
+- **Reasoning Effort**: `medium`, `high`, `xhigh` only
+- **API**: Responses API only (not Chat Completions)
+- **Note**: Requests may take several minutes; use background mode
 
-```python
-# Current recommended model strings
-MODELS = {
-    # GPT-4.1 family (1M context)
-    "gpt-4.1": "gpt-4.1-2025-04-14",
-    "gpt-4.1-mini": "gpt-4.1-mini-2025-04-14",
-    "gpt-4.1-nano": "gpt-4.1-nano-2025-04-14",
-    
-    # GPT-4o family (128K context)
-    "gpt-4o": "gpt-4o-2024-11-20",
-    "gpt-4o-mini": "gpt-4o-mini-2024-07-18",
-    
-    # Reasoning models
-    "o3": "o3",
-    "o4-mini": "o4-mini",
-    "o3-mini": "o3-mini-2025-01-31",
-    "o1": "o1",
-    "o3-pro": "o3-pro",
-    
-    # GPT-5 family
-    "gpt-5": "gpt-5",
-    "gpt-5-mini": "gpt-5-mini",
+Best for: Most difficult problems requiring maximum reasoning
+
+### GPT-5.2-Codex
+**Model String**: `gpt-5.2-codex`
+- **Context Window**: 400,000 tokens
+- **Max Output**: 128,000 tokens
+- **Optimized for**: Agentic coding in Codex/Codex CLI
+- **Features**: Context compaction, Windows support, enhanced cybersecurity
+
+Best for: Long-horizon coding, large refactors, migrations
+
+### GPT-5.2-Chat-Latest
+**Model String**: `gpt-5.2-chat-latest`
+- **Context Window**: 128,000 tokens (reduced)
+- **Max Output**: 16,384 tokens
+- **Same pricing as GPT-5.2**
+
+Used in ChatGPT for "GPT-5.2 Instant" mode
+
+---
+
+## GPT-5.1 Family (November 2025)
+
+### GPT-5.1
+**Model String**: `gpt-5.1` or `gpt-5.1-2025-11-13`
+- **Context Window**: 400,000 tokens
+- **Max Output**: 128,000 tokens
+- **Pricing**: $1.25 / $10.00 per 1M tokens
+- **Reasoning Effort**: `none` (default), `low`, `medium`, `high`
+
+### GPT-5.1-Codex / GPT-5.1-Codex-Max
+**Model Strings**: `gpt-5.1-codex`, `gpt-5.1-codex-max`
+- Optimized for agentic coding
+- Max variant for long-running tasks
+
+---
+
+## GPT-5 Family (August 2025)
+
+### GPT-5
+**Model String**: `gpt-5` or `gpt-5-2025-08-07`
+- **Context Window**: 400,000 tokens
+- **Max Output**: 128,000 tokens
+- **Pricing**: $1.25 / $10.00 per 1M tokens
+- **Reasoning Effort**: `minimal`, `low`, `medium` (default), `high`
+
+### GPT-5 Mini
+**Model String**: `gpt-5-mini` or `gpt-5-mini-2025-08-07`
+- **Context Window**: 400,000 tokens
+- **Pricing**: Lower than GPT-5
+
+### GPT-5 Nano
+**Model String**: `gpt-5-nano` or `gpt-5-nano-2025-08-07`
+- **Context Window**: 400,000 tokens
+- Fastest, cheapest GPT-5 variant
+- Good for summarization, classification
+
+---
+
+## GPT-4.1 Family (April 2025)
+
+### GPT-4.1
+**Model String**: `gpt-4.1` or `gpt-4.1-2025-04-14`
+- **Context Window**: 1,000,000 tokens
+- **Max Output**: 32,768 tokens
+- **Pricing**: $2.00 / $8.00 per 1M tokens
+- **Supports**: Temperature, top_p, all standard parameters
+
+### GPT-4.1-mini
+**Model String**: `gpt-4.1-mini` or `gpt-4.1-mini-2025-04-14`
+- **Context Window**: 1,000,000 tokens
+- **Pricing**: Lower cost option
+
+### GPT-4.1-nano
+**Model String**: `gpt-4.1-nano` or `gpt-4.1-nano-2025-04-14`
+- **Context Window**: 1,000,000 tokens
+- Fastest GPT-4.1 variant
+
+---
+
+## O-Series Reasoning Models
+
+### o3
+**Model String**: `o3`
+- **Context Window**: 200,000 tokens
+- **Max Output**: 100,000 tokens
+- Optimized for math, science, coding, visual reasoning
+
+### o3-pro
+**Model String**: `o3-pro`
+- More compute for harder problems
+- Use background mode to avoid timeouts
+
+### o4-mini
+**Model String**: `o4-mini` or `o4-mini-2025-04-16`
+- **Context Window**: 200,000 tokens
+- Fast, cost-effective reasoning
+- Succeeded by GPT-5 mini
+
+---
+
+## GPT-4o Family (Legacy but still available)
+
+### GPT-4o
+**Model String**: `gpt-4o`
+- **Context Window**: 128,000 tokens
+- **Max Output**: 16,384 tokens
+- **Pricing**: $2.50 / $10.00 per 1M tokens
+- Multimodal (text + images)
+
+### GPT-4o-mini
+**Model String**: `gpt-4o-mini`
+- **Context Window**: 128,000 tokens
+- **Pricing**: $0.15 / $0.60 per 1M tokens
+- Best budget option for simple tasks
+
+---
+
+## Critical Implementation Notes
+
+### Reasoning Models Parameter Restrictions
+**GPT-5.x, o-series models do NOT support these parameters:**
+- `temperature`
+- `top_p`
+- `presence_penalty`
+- `frequency_penalty`
+- `logprobs`
+- `top_logprobs`
+- `logit_bias`
+- `max_tokens` (use `max_completion_tokens` instead)
+
+**Use instead:**
+```javascript
+{
+  "model": "gpt-5.2",
+  "reasoning": { "effort": "medium" },  // none, low, medium, high, xhigh
+  "text": { "verbosity": "medium" },     // low, medium, high
+  "max_completion_tokens": 4096
 }
 ```
 
-## ⚠️ Critical: Reasoning Model Constraints
+### API Selection
+- **GPT-5.2**: Use Responses API for CoT passing between turns
+- **GPT-5.2 Pro**: Responses API only
+- **GPT-4.1, GPT-4o**: Chat Completions API works fine
 
-Reasoning models (o-series, GPT-5) **DO NOT SUPPORT** these parameters:
+### Batch API (50% discount)
+Available for all models. Use for non-time-sensitive workloads:
+- Input: 50% off
+- Output: 50% off
 
-```python
-# ❌ WILL CAUSE ERRORS with o3, o4-mini, GPT-5
-UNSUPPORTED_PARAMS = [
-    "temperature",      # Fixed at 1
-    "top_p",           # Fixed at 1
-    "presence_penalty", # Fixed at 0
-    "frequency_penalty",# Fixed at 0
-    "logprobs",
-    "top_logprobs",
-    "logit_bias",
-    "max_tokens",      # Use max_completion_tokens instead
-]
-```
-
-**Use `reasoning_effort` instead of temperature:**
-```python
-# ✅ CORRECT for reasoning models
-response = client.responses.create(
-    model="gpt-5",
-    reasoning={"effort": "medium"},  # low, medium, high
-    input=[{"role": "user", "content": prompt}]
-)
-```
-
-## Standard Model Implementation
-
-### Chat Completions (GPT-4.1, GPT-4o)
-
-```python
-from openai import OpenAI
-
-client = OpenAI()
-
-response = client.chat.completions.create(
-    model="gpt-4.1",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Hello!"}
+### Code Example (GPT-5.2)
+```javascript
+const response = await fetch("https://api.openai.com/v1/responses", {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${OPENAI_API_KEY}`,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "gpt-5.2",
+    input: [
+      { role: "user", content: "Solve this problem step by step..." }
     ],
-    max_tokens=4096,          # Max output tokens
-    temperature=0.7,          # 0-2, lower = more deterministic
-    top_p=1,                  # Nucleus sampling
-    frequency_penalty=0,      # -2 to 2
-    presence_penalty=0,       # -2 to 2
-    stream=True               # Enable streaming
-)
-
-for chunk in response:
-    if chunk.choices[0].delta.content:
-        print(chunk.choices[0].delta.content, end="")
+    reasoning: { effort: "high" },
+    max_output_tokens: 16000
+  })
+});
 ```
 
-### Reasoning Models (o-series, GPT-5)
-
-```python
-# ⚠️ Use Responses API for best results
-response = client.responses.create(
-    model="o3",
-    reasoning={"effort": "high"},  # low, medium, high
-    input=[
-        {"role": "user", "content": "Solve this step by step: ..."}
-    ]
-)
-
-print(response.output_text)
-
-# Access reasoning tokens (billed as output)
-print(f"Reasoning tokens: {response.usage.reasoning_tokens}")
+### Code Example (GPT-4.1 - Chat Completions)
+```javascript
+const response = await openai.chat.completions.create({
+  model: "gpt-4.1",
+  messages: [
+    { role: "system", content: "You are a helpful assistant." },
+    { role: "user", content: "Hello!" }
+  ],
+  temperature: 0.7,
+  max_tokens: 4096
+});
 ```
-
-### Vision
-
-```python
-response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[{
-        "role": "user",
-        "content": [
-            {"type": "text", "text": "What's in this image?"},
-            {
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{base64_image}",
-                    "detail": "high"  # low, high, auto
-                }
-            }
-        ]
-    }],
-    max_tokens=1000
-)
-```
-
-### Tool Use / Function Calling
-
-```python
-tools = [{
-    "type": "function",
-    "function": {
-        "name": "get_weather",
-        "description": "Get current weather",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {"type": "string"},
-                "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
-            },
-            "required": ["location"]
-        }
-    }
-}]
-
-response = client.chat.completions.create(
-    model="gpt-4.1",
-    messages=[{"role": "user", "content": "Weather in Paris?"}],
-    tools=tools,
-    tool_choice="auto"  # auto, none, or specific function
-)
-
-# Handle tool calls
-if response.choices[0].message.tool_calls:
-    tool_call = response.choices[0].message.tool_calls[0]
-    # Execute function and return result
-```
-
-## Pricing (per 1M tokens)
-
-| Model | Input | Output | Notes |
-|-------|-------|--------|-------|
-| GPT-4.1 | $2.00 | $8.00 | Best value for 1M context |
-| GPT-4.1-mini | $0.40 | $1.60 | |
-| GPT-4.1-nano | $0.10 | $0.40 | Cheapest |
-| GPT-4o | $2.50 | $10.00 | |
-| GPT-4o-mini | $0.15 | $0.60 | |
-| o3 | $10.00 | $40.00 | + reasoning tokens |
-| o4-mini | $1.10 | $4.40 | + reasoning tokens |
-| o3-mini | $1.10 | $4.40 | + reasoning tokens |
-
-## Common Gotchas
-
-1. **`max_tokens` vs `max_completion_tokens`**
-   - Standard models: `max_tokens`
-   - Reasoning models: `max_completion_tokens`
-
-2. **System messages with o-series**
-   - o3, o4-mini, o1 treat system messages as developer messages
-   - Don't use both system AND developer messages in same request
-
-3. **Context window includes reasoning tokens**
-   - Reasoning tokens count against context but aren't visible
-   - Budget accordingly for long conversations
-
-4. **Streaming with o3**
-   - Limited access only
-   - o4-mini and o3-mini support streaming
-
-5. **GPT-5 reasoning modes**
-   - Default is `none` (fast)
-   - Use `minimal`, `low`, `medium`, `high` for reasoning

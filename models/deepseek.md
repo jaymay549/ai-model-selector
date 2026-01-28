@@ -1,227 +1,241 @@
-# DeepSeek Models Reference
+# DeepSeek Models
 
-> Last verified: January 2026
+## Current Models (DeepSeek-V3.2 - December 2025)
 
-## Model Overview
+DeepSeek offers two API endpoints that both use the V3.2 model with different modes:
 
-| Model | Context | Max Output | Max CoT | Vision | Thinking | Best For |
-|-------|---------|------------|---------|--------|----------|----------|
-| **DeepSeek V3.1** | 128K | 8K | - | ❌ | Optional | General, coding |
-| **DeepSeek V3** | 64K | 8K | - | ❌ | ❌ | Budget general |
-| **DeepSeek R1** | 64K | 8K | 64K | ❌ | ✅ | Complex reasoning |
-| **DeepSeek R1-0528** | 128K | 32K | 32K | ❌ | ✅ | Latest reasoning |
+### deepseek-chat (Non-thinking Mode)
+**Model String**: `deepseek-chat`
+**Version**: DeepSeek-V3.2
+- **Context Window**: 128,000 tokens
+- **Max Output**: 8,000 tokens (default: 4K)
+- **Pricing**:
+  - Input (cache hit): $0.028 / 1M tokens
+  - Input (cache miss): $0.28 / 1M tokens
+  - Output: $0.42 / 1M tokens
 
-## Model String Reference
+Best for: General tasks, classification, summarization, extraction, agent pipelines
 
-```python
-MODELS = {
-    # DeepSeek Chat (V3 family)
-    "deepseek-chat": "deepseek-chat",           # Points to latest V3
-    "deepseek-v3": "deepseek-chat",             # Alias
-    "deepseek-v3.1": "deepseek-v3.1",           # If available
-    "deepseek-v3.2": "deepseek-v3.2",           # Latest with thinking toggle
-    
-    # DeepSeek Reasoner (R1 family)
-    "deepseek-reasoner": "deepseek-reasoner",   # Points to latest R1
-    "deepseek-r1": "deepseek-r1",               # Original
-    "deepseek-r1-0528": "deepseek-r1-0528",     # May 2025 update
-}
+**Features Supported**:
+- ✅ JSON Output
+- ✅ Tool Calls
+- ✅ Chat Prefix Completion (Beta)
+- ✅ FIM Completion (Beta)
+
+### deepseek-reasoner (Thinking Mode)
+**Model String**: `deepseek-reasoner`
+**Version**: DeepSeek-V3.2 with Chain-of-Thought
+- **Context Window**: 128,000 tokens
+- **Max CoT Tokens**: 32,000
+- **Max Output**: 64,000 tokens (default: 32K)
+- **Pricing**: Same as deepseek-chat
+  - Input (cache hit): $0.028 / 1M tokens
+  - Input (cache miss): $0.28 / 1M tokens
+  - Output: $0.42 / 1M tokens (includes CoT tokens)
+
+Best for: Math, logic, code analysis, complex reasoning
+
+**Features Supported**:
+- ✅ JSON Output
+- ✅ Tool Calls
+- ✅ Chat Prefix Completion (Beta)
+- ❌ FIM Completion
+
+---
+
+## Previous Versions
+
+### DeepSeek-R1 (January 2025)
+**Model String**: `deepseek-r1` (may still be available)
+- 671B parameters (37B activated per token)
+- Mixture-of-Experts architecture
+- Visible chain-of-thought reasoning
+- MIT licensed (open source)
+
+### DeepSeek-V3 (December 2024)
+- 671B total parameters, 37B activated
+- Multi-head Latent Attention (MLA)
+- Trained on 14.8T tokens
+- Training cost: only $5.58M
+
+---
+
+## Key Advantages
+
+### Extremely Low Pricing
+DeepSeek is **10-30x cheaper** than competitors:
+
+| Model | Input | Output |
+|-------|-------|--------|
+| DeepSeek-chat | $0.28 | $0.42 |
+| GPT-5 | $1.25 | $10.00 |
+| Claude Sonnet 4.5 | $3.00 | $15.00 |
+
+### Automatic Context Caching
+- 90% discount on cache hits ($0.028 vs $0.28)
+- Caching happens automatically
+- No special configuration needed
+
+### OpenAI-Compatible API
+Drop-in replacement for OpenAI:
+```javascript
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  baseURL: 'https://api.deepseek.com',
+  apiKey: process.env.DEEPSEEK_API_KEY
+});
 ```
 
-## API Implementation
+### Open Source (MIT License)
+- Run locally on your infrastructure
+- No API costs for self-hosted
+- Full control over data
 
-### Setup (OpenAI-compatible)
+---
 
+## Code Examples
+
+### Basic Chat
+```javascript
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  baseURL: 'https://api.deepseek.com',
+  apiKey: process.env.DEEPSEEK_API_KEY
+});
+
+const response = await client.chat.completions.create({
+  model: 'deepseek-chat',
+  messages: [
+    { role: 'system', content: 'You are a helpful assistant.' },
+    { role: 'user', content: 'Hello!' }
+  ],
+  max_tokens: 4096
+});
+```
+
+### Reasoning Mode (R1)
+```javascript
+const response = await client.chat.completions.create({
+  model: 'deepseek-reasoner',
+  messages: [
+    { role: 'user', content: 'Solve this math problem step by step: ...' }
+  ],
+  max_tokens: 8000
+});
+
+// Response includes visible chain-of-thought reasoning
+```
+
+### With Tool Calls
+```javascript
+const response = await client.chat.completions.create({
+  model: 'deepseek-chat',
+  messages: [
+    { role: 'user', content: 'What is the weather in Tokyo?' }
+  ],
+  tools: [
+    {
+      type: 'function',
+      function: {
+        name: 'get_weather',
+        description: 'Get current weather',
+        parameters: {
+          type: 'object',
+          properties: {
+            location: { type: 'string' }
+          },
+          required: ['location']
+        }
+      }
+    }
+  ]
+});
+```
+
+### JSON Output
+```javascript
+const response = await client.chat.completions.create({
+  model: 'deepseek-chat',
+  messages: [
+    { role: 'user', content: 'Extract entities from this text...' }
+  ],
+  response_format: { type: 'json_object' }
+});
+```
+
+### Python Example
 ```python
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="YOUR_DEEPSEEK_API_KEY",
-    base_url="https://api.deepseek.com"
+    base_url="https://api.deepseek.com",
+    api_key=os.environ["DEEPSEEK_API_KEY"]
 )
-```
 
-### Basic Chat (V3)
-
-```python
 response = client.chat.completions.create(
     model="deepseek-chat",
     messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Hello!"}
-    ],
-    max_tokens=4096,
-    temperature=0.7,
-    stream=True
+    ]
 )
-
-for chunk in response:
-    if chunk.choices[0].delta.content:
-        print(chunk.choices[0].delta.content, end="")
-```
-
-### Reasoning Model (R1)
-
-```python
-response = client.chat.completions.create(
-    model="deepseek-reasoner",
-    messages=[
-        {"role": "user", "content": "Solve this step by step: What is 23^4?"}
-    ],
-    max_tokens=8192,  # Include space for reasoning
-    stream=True
-)
-
-# R1 includes reasoning in response
-for chunk in response:
-    content = chunk.choices[0].delta.content
-    if content:
-        print(content, end="")
-```
-
-### V3.2 with Thinking Toggle
-
-```python
-# Enable thinking mode (similar to o1)
-response = client.chat.completions.create(
-    model="deepseek-v3.2",
-    messages=[
-        {"role": "user", "content": "Complex reasoning task..."}
-    ],
-    extra_body={
-        "enable_thinking": True
-    },
-    stream=True
-)
-
-# Response includes reasoning_content field
-```
-
-### Accessing Reasoning Content
-
-```python
-# Non-streaming to get full reasoning
-response = client.chat.completions.create(
-    model="deepseek-reasoner",
-    messages=[{"role": "user", "content": "Solve..."}],
-    max_tokens=8192,
-    stream=False
-)
-
-# Check usage for reasoning tokens
-print(f"Reasoning tokens: {response.usage.completion_tokens}")
-
-# Reasoning is embedded in the response content
 print(response.choices[0].message.content)
 ```
 
-## Pricing (per 1M tokens)
+---
 
-| Model | Input | Output | Cache Hit |
-|-------|-------|--------|-----------|
-| **DeepSeek V3/Chat** | $0.27 | $1.10 | $0.014 |
-| **DeepSeek R1** | $0.55 | $2.19 | - |
+## Model Selection Guide
 
-**Extremely competitive pricing** - often 10-20x cheaper than competitors.
+| Use Case | Model | Reason |
+|----------|-------|--------|
+| General chat | deepseek-chat | Fast, cheap |
+| Math/logic | deepseek-reasoner | Chain-of-thought |
+| Code tasks | deepseek-chat | Good at code |
+| Budget operations | deepseek-chat | 10x cheaper than GPT |
+| Self-hosting | DeepSeek-V3/R1 | MIT license |
 
-## Context Caching
+---
 
-DeepSeek automatically caches repeated prefixes:
+## When to Use DeepSeek
 
-```python
-# First request - full price
-response1 = client.chat.completions.create(
-    model="deepseek-chat",
-    messages=[
-        {"role": "system", "content": long_system_prompt},  # Cached
-        {"role": "user", "content": "Question 1"}
-    ]
-)
+**Best for:**
+- High-volume, cost-sensitive applications
+- Math and reasoning tasks (R1)
+- Code generation and analysis
+- Teams with infrastructure for self-hosting
+- Projects requiring open-source models
 
-# Second request - cache hit on system prompt
-response2 = client.chat.completions.create(
-    model="deepseek-chat",
-    messages=[
-        {"role": "system", "content": long_system_prompt},  # Cache hit!
-        {"role": "user", "content": "Question 2"}
-    ]
-)
+**Consider alternatives for:**
+- Cutting-edge performance (use GPT-5.2, Opus 4.5)
+- Multimodal tasks (DeepSeek is text-only)
+- Enterprise compliance requirements
+- When you need maximum reasoning quality
 
-# Check cache usage
-print(f"Cache hits: {response2.usage.prompt_cache_hit_tokens}")
-print(f"Cache misses: {response2.usage.prompt_cache_miss_tokens}")
-```
+---
 
-Cache is in 64-token chunks, persists for a short time.
+## API Details
 
-## Common Gotchas
+**Base URL**: `https://api.deepseek.com`
 
-1. **Context window is INPUT + OUTPUT combined**
-   - 64K total for V3, not 64K input + 8K output
-   - Plan accordingly for long conversations
+**Rate Limits**: Check dashboard for current limits
 
-2. **Output defaults to 4K, max 8K**
-   - Must explicitly set `max_tokens` for longer outputs
-   - R1-0528 supports up to 32K output
+**Context Caching**: Automatic, no configuration needed
 
-3. **Reasoning tokens count toward output**
-   - R1's chain-of-thought is part of the response
-   - Budget for longer outputs when using reasoning
+**Batch API**: 33% discount, 12-hour completion window
 
-4. **No vision support**
-   - DeepSeek models are text-only
-   - Use other providers for multimodal
+**Free Tier**: First 50-200M tokens free (varies by model)
 
-5. **Rate limiting during high traffic**
-   - No fixed limits, but throttling occurs
-   - May get 429 errors during peak times
+---
 
-6. **Thinking mode is non-standard**
-   - `enable_thinking` in `extra_body`
-   - Not part of OpenAI-compatible spec
+## Self-Hosting Options
 
-7. **Azure/AWS hosting available**
-   - Higher rate limits, different pricing
-   - Context may be longer (128K on Azure)
+DeepSeek models are MIT licensed and available on Hugging Face:
+- `deepseek-ai/DeepSeek-V3`
+- `deepseek-ai/DeepSeek-R1`
 
-## Alternative Hosting
+Hardware requirements for V3/R1 (671B params):
+- Minimum: 8x A100 80GB or equivalent
+- Recommended: 8x H100 for good performance
 
-### Alibaba Model Studio
-```python
-client = OpenAI(
-    api_key="YOUR_DASHSCOPE_KEY",
-    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
-)
-
-# V3.2 with thinking toggle
-response = client.chat.completions.create(
-    model="deepseek-v3.2",
-    messages=[...],
-    extra_body={"enable_thinking": True}
-)
-```
-
-### AWS Bedrock
-```python
-import boto3
-
-client = boto3.client("bedrock-runtime", region_name="us-west-2")
-
-# Use cross-region inference profile
-response = client.invoke_model(
-    modelId="us.deepseek.r1-v1:0",
-    body=json.dumps({
-        "prompt": "<｜begin▁of▁sentence｜><｜User｜>Hello<｜Assistant｜>",
-        "max_tokens": 8192,  # Max 8192 for quality, API accepts 32K
-        "temperature": 0.5
-    })
-)
-```
-
-## Best Practices
-
-1. **For reasoning tasks**: Use R1-0528 with high `max_tokens`
-2. **For cost efficiency**: Use V3 for simple tasks
-3. **For long context**: Consider Azure hosting (128K)
-4. **For caching**: Keep system prompts consistent
-5. **For streaming**: Always use for better UX with R1
+For smaller deployments, consider distilled versions.

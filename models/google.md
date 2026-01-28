@@ -1,253 +1,213 @@
-# Google Gemini Models Reference
+# Google Gemini Models
 
-> Last verified: January 2026
+## Gemini 3 Family (Late 2025 - Preview)
 
-## Model Overview
+### Gemini 3 Pro (Preview)
+**Model String**: `gemini-3-pro-preview`
+- **Context Window**: 1,000,000 tokens (2M coming)
+- **Max Output**: 64,000 tokens
+- **Pricing (≤200K context)**: $2.00 / $12.00 per 1M tokens
+- **Pricing (>200K context)**: $4.00 / $18.00 per 1M tokens
+- **Status**: Preview - pricing may settle around $1.50/$10 in stable release
 
-| Model | Context | Max Output | Vision | Thinking | Best For |
-|-------|---------|------------|--------|----------|----------|
-| **Gemini 2.5 Pro** | 1M (2M soon) | 64K | ✅ | ✅ | Complex reasoning, long context |
-| **Gemini 2.5 Flash** | 1M | 8K | ✅ | ✅ | Fast, high-volume |
-| **Gemini 2.5 Flash-Lite** | 1M | 8K | ✅ | ❌ | Budget, simple tasks |
-| **Gemini 2.0 Flash** | 1M | 8K | ✅ | ❌ | Legacy, being deprecated |
-| **Gemini 3 Pro** | 1M | 64K | ✅ | ✅ | Frontier (if available) |
+Best for: Most complex reasoning, multimodal analysis, large document processing
 
-## Model String Reference
+**Note**: 80%+ better reasoning than Gemini 2.5 on complex tasks
 
-```python
-MODELS = {
-    # Gemini 2.5 (current recommended)
-    "gemini-2.5-pro": "gemini-2.5-pro",
-    "gemini-2.5-flash": "gemini-2.5-flash",
-    "gemini-2.5-flash-lite": "gemini-2.5-flash-lite",
-    
-    # Gemini 2.0 (being deprecated March 2026)
-    "gemini-2.0-flash": "gemini-2.0-flash",
-    "gemini-2.0-flash-lite": "gemini-2.0-flash-lite",
-    
-    # Stable snapshots
-    "gemini-2.5-pro-stable": "gemini-2.5-pro-001",
-    "gemini-2.5-flash-stable": "gemini-2.5-flash-001",
-}
-```
+---
 
-## API Implementation (Google AI Studio)
+## Gemini 2.5 Family (Current Stable)
 
-### Setup
+### Gemini 2.5 Pro
+**Model String**: `gemini-2.5-pro` or `gemini-2.5-pro-latest`
+- **Context Window**: 1,000,000 tokens
+- **Max Output**: 64,000 tokens
+- **Pricing (≤200K context)**: $1.25 / $10.00 per 1M tokens
+- **Pricing (>200K context)**: $2.50 / $15.00 per 1M tokens
+- **Thinking Mode Output**: $3.50 / MTok (when enabled)
 
-```python
-import google.generativeai as genai
+Best for: Complex reasoning, code, math, STEM, long document analysis
 
-genai.configure(api_key="YOUR_API_KEY")
+### Gemini 2.5 Flash
+**Model String**: `gemini-2.5-flash` or `gemini-2.5-flash-latest`
+- **Context Window**: 1,000,000 tokens
+- **Max Output**: 65,536 tokens
+- **Pricing**: $0.30 / $2.50 per 1M tokens (non-thinking)
+- **Thinking Mode**: $0.15 input, $3.50 output per 1M
+- **Cache Read**: $0.075 / MTok
 
-model = genai.GenerativeModel("gemini-2.5-flash")
-```
+Best for: Large-scale processing, low-latency tasks, balanced price/performance
 
-### Basic Chat
+### Gemini 2.5 Flash-Lite
+**Model String**: `gemini-2.5-flash-lite`
+- **Context Window**: 1,000,000 tokens
+- **Pricing**: $0.10 / $0.40 per 1M tokens
 
-```python
-response = model.generate_content("Explain quantum computing")
-print(response.text)
-```
+Most cost-efficient model for high-throughput tasks
 
-### With Configuration
+---
 
-```python
-generation_config = {
-    "temperature": 0.7,
-    "top_p": 0.95,
-    "top_k": 40,
-    "max_output_tokens": 8192,
-}
+## Gemini 2.0 Family (Being Deprecated)
 
-model = genai.GenerativeModel(
-    model_name="gemini-2.5-flash",
-    generation_config=generation_config
-)
+### Gemini 2.0 Flash
+**Model String**: `gemini-2.0-flash`
+- **Context Window**: 1,000,000 tokens
+- **Status**: Deprecated - shutdown March 31, 2026
+- Native tool use, multimodal
 
-response = model.generate_content("Write a poem")
-```
+### Gemini 2.0 Flash-Lite
+**Model String**: `gemini-2.0-flash-lite`
+- **Status**: Deprecated - shutdown March 31, 2026
 
-### Multi-turn Chat
+⚠️ **Migrate to Gemini 2.5 Flash or Flash-Lite**
 
-```python
-chat = model.start_chat(history=[])
+---
 
-response = chat.send_message("Hello!")
-print(response.text)
+## Specialized Models
 
-response = chat.send_message("What did I just say?")
-print(response.text)
-```
+### Gemini 2.5 Flash TTS
+**Model String**: `gemini-2.5-flash-tts`
+- Text-to-speech model
+- Low-latency, controllable speech generation
+- Preview status
 
-### Vision
+### Imagen 4.0
+**Model Strings**: `imagen-4.0-generate-001`, `imagen-4.0-ultra-generate-001`, `imagen-4.0-fast-generate-001`
+- Latest image generation
+- Better text rendering and quality
 
-```python
-import PIL.Image
+### Veo 3.1
+**Model Strings**: `veo-3.1-generate-preview`, `veo-3.1-fast-generate-preview`
+- Video generation (paid tier only)
 
-image = PIL.Image.open("image.jpg")
+---
 
-response = model.generate_content([
-    "What's in this image?",
-    image
-])
-print(response.text)
-```
+## Free Tier
 
-### Thinking Mode (2.5 models)
+Google AI Studio offers generous free access:
+- **Models**: Gemini 1.5 Pro, 2.5 Flash, Flash-Lite
+- **Rate Limits**: 5-15 RPM depending on model
+- **Token Limits**: 250,000 TPM, 1,000 requests/day
 
-```python
-# Enable thinking for complex reasoning
-model = genai.GenerativeModel(
-    model_name="gemini-2.5-flash",
-    generation_config={
-        "thinking_config": {
-            "thinking_budget": 10000  # Max thinking tokens
-        }
+Perfect for prototyping and testing!
+
+---
+
+## Key Features
+
+### Thinking Mode
+Available on Gemini 2.5 Pro and Flash:
+```javascript
+{
+  "model": "gemini-2.5-flash",
+  "generationConfig": {
+    "thinkingConfig": {
+      "thinkingBudget": 10000  // tokens for reasoning
     }
-)
-
-response = model.generate_content("Solve this complex math problem...")
-
-# Access thinking process if available
-for part in response.candidates[0].content.parts:
-    if hasattr(part, 'thought'):
-        print(f"Thinking: {part.thought}")
-    else:
-        print(f"Response: {part.text}")
+  }
+}
 ```
 
-### Streaming
+### Grounding with Google Search
+Add real-time search data to responses:
+- First 1,500 queries/day free on paid tiers
+- Then $35 per 1,000 grounding queries
 
-```python
-response = model.generate_content(
-    "Tell me a long story",
-    stream=True
-)
+### Context Caching
+Reduce costs for repeated prompts:
+- Cache read at ~$0.075/MTok for Flash
+- Significant savings for document-heavy workloads
 
-for chunk in response:
-    print(chunk.text, end="", flush=True)
+---
+
+## Code Examples
+
+### Basic Request (Gemini Developer API)
+```javascript
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+const result = await model.generateContent("Hello, Gemini!");
+console.log(result.response.text());
 ```
 
-## Vertex AI Implementation
+### With Thinking Mode
+```javascript
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.5-pro",
+  generationConfig: {
+    thinkingConfig: {
+      thinkingBudget: 8000
+    }
+  }
+});
 
+const result = await model.generateContent("Complex reasoning task...");
+```
+
+### Multimodal (Image + Text)
+```javascript
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+const imagePart = {
+  inlineData: {
+    data: base64ImageData,
+    mimeType: "image/jpeg"
+  }
+};
+
+const result = await model.generateContent([
+  "What's in this image?",
+  imagePart
+]);
+```
+
+### Vertex AI (Google Cloud)
 ```python
 import vertexai
 from vertexai.generative_models import GenerativeModel
 
 vertexai.init(project="your-project", location="us-central1")
-
 model = GenerativeModel("gemini-2.5-pro")
 
-response = model.generate_content(
-    "Your prompt here",
-    generation_config={
-        "max_output_tokens": 8192,
-        "temperature": 0.7,
-    }
-)
+response = model.generate_content("Hello!")
+print(response.text)
 ```
 
-## REST API (Direct)
+---
 
-```bash
-curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contents": [{
-      "parts": [{"text": "Hello!"}]
-    }],
-    "generationConfig": {
-      "temperature": 0.7,
-      "maxOutputTokens": 8192
-    }
-  }'
-```
+## Model Selection Guide
 
-## Pricing (per 1M tokens)
+| Use Case | Recommended Model | Reason |
+|----------|-------------------|--------|
+| Complex reasoning | Gemini 2.5 Pro | Best thinking capabilities |
+| High-volume processing | Gemini 2.5 Flash | Fast, cheap, 1M context |
+| Budget tasks | Gemini 2.5 Flash-Lite | Cheapest ($0.10/$0.40) |
+| Free prototyping | Gemini 1.5 Pro (free) | No cost, good for dev |
+| Cutting-edge | Gemini 3 Pro (preview) | Latest capabilities |
+| Image generation | Imagen 4.0 | Best quality |
+| Video generation | Veo 3.1 | Latest video model |
 
-| Model | Input (<128K) | Input (>128K) | Output |
-|-------|---------------|---------------|--------|
-| **Gemini 2.5 Pro** | $1.25 | $2.50 | $5.00 |
-| **Gemini 2.5 Flash** | $0.075 | $0.15 | $0.30 |
-| **Gemini 2.5 Flash-Lite** | $0.0375 | $0.075 | $0.15 |
+---
 
-**Free tier available** in AI Studio with generous limits.
+## Pricing Comparison (per 1M tokens)
 
-## Special Features
+| Model | Input | Output | Notes |
+|-------|-------|--------|-------|
+| Gemini 3 Pro | $2.00 | $12.00 | Preview, ≤200K |
+| Gemini 2.5 Pro | $1.25 | $10.00 | ≤200K context |
+| Gemini 2.5 Flash | $0.30 | $2.50 | Non-thinking |
+| Gemini 2.5 Flash-Lite | $0.10 | $0.40 | Cheapest |
+| Flash Thinking | $0.15 | $3.50 | With thinking enabled |
 
-### Grounding with Google Search
-```python
-from vertexai.generative_models import Tool
+---
 
-search_tool = Tool.from_google_search_retrieval(
-    google_search_retrieval={"dynamic_retrieval_config": {"mode": "MODE_DYNAMIC"}}
-)
+## Platform Availability
 
-model = GenerativeModel(
-    "gemini-2.5-flash",
-    tools=[search_tool]
-)
-```
+- **Google AI Studio** (ai.google.dev) - Free tier available
+- **Vertex AI** (Google Cloud) - Enterprise features
+- **Firebase** - Mobile/web integration
 
-### Context Caching
-```python
-# Cache large documents for repeated queries
-cached_content = genai.caching.create(
-    model="gemini-2.5-flash",
-    contents=[large_document],
-    ttl=datetime.timedelta(hours=1)
-)
-
-model = genai.GenerativeModel.from_cached_content(cached_content)
-```
-
-### Code Execution
-```python
-model = genai.GenerativeModel(
-    "gemini-2.5-flash",
-    tools="code_execution"
-)
-
-response = model.generate_content("Calculate the 50th Fibonacci number")
-```
-
-### Multimodal Input
-```python
-# Audio, video, PDF support
-response = model.generate_content([
-    "Summarize this video",
-    genai.upload_file("video.mp4")
-])
-```
-
-## Common Gotchas
-
-1. **Model naming conventions changed Sept 2025**
-   - Stable models: `gemini-2.5-flash` (no suffix)
-   - Specific versions: `gemini-2.5-flash-001`
-   - Preview: `gemini-2.5-flash-preview`
-
-2. **Thinking tokens aren't always visible**
-   - Depends on model and configuration
-   - Still billed even if not shown
-
-3. **Long context pricing tiers**
-   - Different rates above/below 128K tokens
-   - Plan accordingly for large documents
-
-4. **Deprecation timeline**
-   - Gemini 2.0 Flash/Lite: March 31, 2026
-   - Migrate to 2.5 versions
-
-5. **Rate limits vary by tier**
-   - Free tier: ~15 RPM, ~1M TPM
-   - Paid tier: significantly higher
-
-6. **Output token limits**
-   - Flash models: 8K default, can request more
-   - Pro models: up to 64K
-
-7. **Global endpoint vs regional**
-   - Some models only available in specific regions
-   - Global endpoint routes automatically
+All platforms support same models with slightly different pricing on Vertex AI.

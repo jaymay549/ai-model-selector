@@ -1,316 +1,229 @@
-# Embedding Models Reference
+# Embedding Models
 
-> Last verified: January 2026
+## Voyage AI (Recommended for Quality)
 
-## Quick Selection Guide
+### voyage-3-large
+**Best overall quality for general-purpose embeddings**
+- **Dimensions**: 256 - 2,048 (configurable via Matryoshka)
+- **Context Window**: 32,000 tokens
+- **Pricing**: $0.06 / 1M tokens
+- **Free Tier**: 200M tokens free
 
-| Use Case | Recommended Model | Dimensions | Price/1M |
-|----------|-------------------|------------|----------|
-| **General RAG** | Voyage 3-large | 1024 | $0.06 |
-| **Budget RAG** | text-embedding-3-small | 1536 | $0.02 |
-| **Code search** | Voyage Code 3 | 1024 | $0.06 |
-| **Legal docs** | Voyage Law 2 | 1024 | $0.12 |
-| **Finance** | Voyage Finance 2 | 1024 | $0.12 |
-| **Free tier** | Gemini embedding-001 | 768-3072 | Free |
-| **Self-hosted** | nomic-embed-text | 768 | Free |
+State-of-the-art on MTEB, outperforms OpenAI by ~10%
 
-## Model Comparison
+### voyage-3.5 / voyage-3.5-lite
+**Latest Voyage models (2025)**
+- **voyage-3.5**: $0.06 / 1M tokens, best quality
+- **voyage-3.5-lite**: $0.02 / 1M tokens, best value
+- **Context**: 32,000 tokens
+- **Features**: Matryoshka embeddings, int8/binary quantization
 
-| Model | Dimensions | Context | MTEB Score | Price/1M |
-|-------|------------|---------|------------|----------|
-| **Voyage 3-large** | 256-2048 | 32K | 68.3 | $0.06 |
-| **Voyage 3.5** | 256-2048 | 32K | 67.1 | $0.06 |
-| **Voyage 4** | 256-2048 | 32K | ~69 | $0.06 |
-| **text-embedding-3-large** | 256-3072 | 8K | 64.6 | $0.13 |
-| **text-embedding-3-small** | 512-1536 | 8K | 62.3 | $0.02 |
-| **Gemini embedding-001** | 768-3072 | 2K | ~64 | Free |
-| **Cohere embed-v3** | 1024 | 512 | 64.5 | $0.10 |
+Outperforms OpenAI-v3-large by 6-8%
+
+### voyage-code-3
+**Best for code retrieval**
+- **Dimensions**: Up to 2,048
+- **Context Window**: 32,000 tokens
+- **Pricing**: $0.06 / 1M tokens
+- **Free Tier**: 200M tokens free
+
+Outperforms OpenAI and CodeSage by 13-17%
+
+### voyage-law-2
+**Optimized for legal domain**
+- **Pricing**: ~$0.12 / 1M tokens
+- **Free Tier**: 50M tokens free
+
+### voyage-finance-2
+**Optimized for financial domain**
+- **Pricing**: ~$0.12 / 1M tokens
+- **Free Tier**: 50M tokens free
+
+---
 
 ## OpenAI Embeddings
 
-### Implementation
+### text-embedding-3-large
+**Highest quality OpenAI embedding**
+- **Dimensions**: 256 - 3,072 (configurable)
+- **Context Window**: 8,191 tokens
+- **Pricing**: $0.13 / 1M tokens
+- **Batch API**: $0.065 / 1M tokens (50% off)
 
-```python
-from openai import OpenAI
+### text-embedding-3-small
+**Best value OpenAI embedding**
+- **Dimensions**: 512 - 1,536 (configurable)
+- **Context Window**: 8,191 tokens
+- **Pricing**: $0.02 / 1M tokens
+- **Batch API**: $0.01 / 1M tokens
 
-client = OpenAI()
+Excellent for budget-conscious production use
 
-response = client.embeddings.create(
-    model="text-embedding-3-large",
-    input="Your text here",
-    dimensions=1024,  # Optional: reduce dimensions
-    encoding_format="float"  # or "base64"
-)
+### text-embedding-ada-002 (Legacy)
+- **Dimensions**: 1,536 (fixed)
+- **Pricing**: $0.10 / 1M tokens
+- **Recommendation**: Use text-embedding-3-small instead
 
-embedding = response.data[0].embedding
-print(f"Dimensions: {len(embedding)}")
-```
-
-### Batch Processing
-
-```python
-texts = ["First document", "Second document", "Third document"]
-
-response = client.embeddings.create(
-    model="text-embedding-3-small",
-    input=texts
-)
-
-embeddings = [item.embedding for item in response.data]
-```
-
-### Available Models
-
-| Model | Default Dims | Max Dims | Context | Price/1M |
-|-------|-------------|----------|---------|----------|
-| text-embedding-3-large | 3072 | 3072 | 8191 | $0.13 |
-| text-embedding-3-small | 1536 | 1536 | 8191 | $0.02 |
-| text-embedding-ada-002 | 1536 | 1536 | 8191 | $0.10 |
-
-### Dimension Reduction
-
-```python
-# Reduce dimensions to save storage (Matryoshka training)
-response = client.embeddings.create(
-    model="text-embedding-3-large",
-    input="Your text",
-    dimensions=512  # Reduce from 3072
-)
-# Still useful for retrieval, lower storage cost
-```
-
-## Voyage AI Embeddings
-
-### Implementation
-
-```python
-import voyageai
-
-client = voyageai.Client()
-
-result = client.embed(
-    texts=["Your text here"],
-    model="voyage-3-large",
-    input_type="document",  # or "query"
-    output_dimension=1024   # Optional
-)
-
-embedding = result.embeddings[0]
-```
-
-### Query vs Document
-
-```python
-# For indexing documents
-doc_embeddings = client.embed(
-    texts=documents,
-    model="voyage-3-large",
-    input_type="document"
-)
-
-# For search queries
-query_embedding = client.embed(
-    texts=[query],
-    model="voyage-3-large",
-    input_type="query"  # Optimized for retrieval
-)
-```
-
-### Available Models
-
-| Model | Best For | Dimensions | Context | Price/1M |
-|-------|----------|------------|---------|----------|
-| voyage-4-large | Highest quality | 256-2048 | 32K | $0.18 |
-| voyage-4 | Balanced | 256-2048 | 32K | $0.10 |
-| voyage-4-lite | Budget | 256-2048 | 32K | $0.02 |
-| voyage-3-large | General | 256-2048 | 32K | $0.06 |
-| voyage-3.5 | Fast | 256-2048 | 32K | $0.06 |
-| voyage-code-3 | Code | 256-2048 | 32K | $0.06 |
-| voyage-law-2 | Legal | 1024 | 16K | $0.12 |
-| voyage-finance-2 | Finance | 1024 | 16K | $0.12 |
-
-### Quantization Options
-
-```python
-# Reduce storage with quantization
-result = client.embed(
-    texts=["Your text"],
-    model="voyage-3-large",
-    output_dimension=512,
-    output_dtype="int8"  # or "uint8", "binary", "ubinary"
-)
-# Binary: 1/32 storage, minimal quality loss
-```
+---
 
 ## Google Gemini Embeddings
 
-### Implementation
+### gemini-embedding-001
+**Free option with good quality**
+- **Dimensions**: 768 - 3,072 (configurable)
+- **Context Window**: Large
+- **Pricing**: Free tier available!
 
-```python
-import google.generativeai as genai
+Good for prototyping and budget applications
 
-genai.configure(api_key="YOUR_API_KEY")
-
-result = genai.embed_content(
-    model="models/text-embedding-004",
-    content="Your text here",
-    task_type="retrieval_document"
-)
-
-embedding = result['embedding']
-```
-
-### Task Types
-
-```python
-# Different embeddings for different tasks
-TASK_TYPES = [
-    "retrieval_query",      # Search queries
-    "retrieval_document",   # Documents to search
-    "semantic_similarity",  # Comparing texts
-    "classification",       # Text classification
-    "clustering"            # Grouping similar texts
-]
-```
-
-### Available Models
-
-| Model | Dimensions | Context | Price |
-|-------|------------|---------|-------|
-| text-embedding-004 | 768 | 2048 | Free |
-| embedding-001 | 768 | 2048 | Free |
-
-**Generous free tier** makes Gemini good for development/testing.
+---
 
 ## Cohere Embeddings
 
-### Implementation
+### embed-v4 / embed-english-v3
+- **Dimensions**: Up to 1,024
+- **Pricing**: ~$0.10 / 1M tokens
+- Good multilingual support
 
-```python
-import cohere
+---
 
-co = cohere.Client("YOUR_API_KEY")
+## Quick Comparison
 
-response = co.embed(
-    texts=["Your text here"],
-    model="embed-english-v3.0",
-    input_type="search_document"  # or "search_query"
-)
+| Model | Quality | Price/1M | Dimensions | Context |
+|-------|---------|----------|------------|---------|
+| voyage-3-large | ⭐⭐⭐⭐⭐ | $0.06 | 256-2048 | 32K |
+| voyage-3.5 | ⭐⭐⭐⭐⭐ | $0.06 | 256-2048 | 32K |
+| voyage-3.5-lite | ⭐⭐⭐⭐ | $0.02 | 256-2048 | 32K |
+| voyage-code-3 | ⭐⭐⭐⭐⭐ | $0.06 | 256-2048 | 32K |
+| text-embedding-3-large | ⭐⭐⭐⭐ | $0.13 | 256-3072 | 8K |
+| text-embedding-3-small | ⭐⭐⭐ | $0.02 | 512-1536 | 8K |
+| gemini-embedding-001 | ⭐⭐⭐ | Free | 768-3072 | Large |
 
-embeddings = response.embeddings
+---
+
+## Selection Guide
+
+| Use Case | Recommended | Reason |
+|----------|-------------|--------|
+| General RAG (quality) | voyage-3.5 | Best MTEB scores |
+| General RAG (budget) | text-embedding-3-small | $0.02/1M, good quality |
+| Code search | voyage-code-3 | Optimized for code |
+| Legal documents | voyage-law-2 | Domain-specific |
+| Financial docs | voyage-finance-2 | Domain-specific |
+| Free prototyping | gemini-embedding-001 | No cost |
+| High-volume prod | voyage-3.5-lite | $0.02/1M, great quality |
+
+---
+
+## Code Examples
+
+### Voyage AI
+```javascript
+import Anthropic from '@anthropic-ai/sdk';
+// Or use Voyage SDK directly
+
+// Using Voyage API directly
+const response = await fetch('https://api.voyageai.com/v1/embeddings', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${VOYAGE_API_KEY}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'voyage-3-large',
+    input: ['Hello world', 'Another text'],
+    input_type: 'document',  // or 'query' for search queries
+    output_dimension: 1024,   // Matryoshka: choose dimension
+    output_dtype: 'float'     // or 'int8', 'binary'
+  })
+});
 ```
 
-### Available Models
+### OpenAI
+```javascript
+import OpenAI from 'openai';
 
-| Model | Dimensions | Languages | Price/1M |
-|-------|------------|-----------|----------|
-| embed-english-v3.0 | 1024 | English | $0.10 |
-| embed-multilingual-v3.0 | 1024 | 100+ | $0.10 |
+const openai = new OpenAI();
 
-## Self-Hosted (Ollama)
+const response = await openai.embeddings.create({
+  model: 'text-embedding-3-small',
+  input: ['Hello world', 'Another text'],
+  dimensions: 1024  // Optional: reduce dimensions
+});
 
-### Setup
-
-```bash
-# Install Ollama and pull model
-ollama pull nomic-embed-text
-
-# Or for multilingual
-ollama pull mxbai-embed-large
+const embeddings = response.data.map(d => d.embedding);
 ```
 
-### Implementation
+### Google Gemini
+```javascript
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-```python
-import ollama
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 
-response = ollama.embeddings(
-    model="nomic-embed-text",
-    prompt="Your text here"
-)
-
-embedding = response["embedding"]
+const result = await model.embedContent("Hello world");
+const embedding = result.embedding.values;
 ```
 
-### Available Models
+---
 
-| Model | Dimensions | Context | Size |
-|-------|------------|---------|------|
-| nomic-embed-text | 768 | 8192 | 274MB |
-| mxbai-embed-large | 1024 | 512 | 670MB |
-| all-minilm | 384 | 256 | 45MB |
+## Dimension Reduction (Matryoshka)
 
-## Best Practices
+Modern embeddings support flexible dimensions:
 
-### 1. Chunking Strategy
-
-```python
-# Optimal chunk sizes by model
-CHUNK_SIZES = {
-    "voyage-3-large": 512,      # Can handle 32K but 512 is optimal
-    "text-embedding-3-large": 512,
-    "text-embedding-3-small": 256,
-    "nomic-embed-text": 512,
+```javascript
+// Voyage: specify output_dimension
+{
+  model: 'voyage-3-large',
+  output_dimension: 512  // Reduce from 2048 to 512
 }
 
-# Overlap for continuity
-OVERLAP = 50  # tokens
-```
-
-### 2. Batch for Efficiency
-
-```python
-# Process in batches to reduce API calls
-BATCH_SIZE = 100  # Voyage supports up to 128
-
-for i in range(0, len(texts), BATCH_SIZE):
-    batch = texts[i:i + BATCH_SIZE]
-    embeddings = client.embed(texts=batch, model="voyage-3-large")
-```
-
-### 3. Dimension Selection
-
-```python
-# Balance quality vs storage
-DIMENSION_GUIDE = {
-    "high_quality": 1024,    # Best retrieval
-    "balanced": 512,         # Good tradeoff
-    "storage_limited": 256,  # Minimal loss
+// OpenAI: specify dimensions
+{
+  model: 'text-embedding-3-large',
+  dimensions: 1024  // Reduce from 3072 to 1024
 }
 ```
 
-### 4. Input Type Matters
+**Trade-offs:**
+- Lower dimensions = smaller storage, faster search
+- Quality degrades gracefully (not linearly)
+- Test with your data to find optimal dimension
 
-```python
-# Always specify for retrieval tasks
-# Query embeddings and document embeddings are asymmetric
-doc_emb = embed(docs, input_type="document")
-query_emb = embed(query, input_type="query")  # Different!
+---
+
+## Quantization Options (Voyage)
+
+Reduce storage costs further:
+
+```javascript
+{
+  model: 'voyage-3.5',
+  output_dtype: 'int8'    // 4x smaller than float32
+  // or 'binary'          // 32x smaller, some quality loss
+}
 ```
 
-## Common Gotchas
+**Storage savings:**
+- float32 (1024 dims): 4KB per vector
+- int8 (1024 dims): 1KB per vector
+- binary (1024 dims): 128 bytes per vector
 
-1. **Token limits vary widely**
-   - OpenAI: 8K tokens
-   - Voyage: 32K tokens
-   - Gemini: 2K tokens
+---
 
-2. **Dimension reduction quality**
-   - Models with Matryoshka training (OpenAI, Voyage) handle it well
-   - Others may degrade significantly
+## Cost Optimization Tips
 
-3. **Query vs Document embeddings**
-   - Many models optimize differently for each
-   - Always use the correct input type
+1. **Use batch processing** - OpenAI Batch API gives 50% off
+2. **Reduce dimensions** - 512-1024 often sufficient
+3. **Use quantization** - int8 for minimal quality loss
+4. **Cache embeddings** - Don't re-embed unchanged documents
+5. **Use appropriate model** - Don't use voyage-3-large for simple tasks
 
-4. **Batch limits**
-   - OpenAI: No explicit limit but watch rate limits
-   - Voyage: 128 texts, 1M tokens per request
+---
 
-5. **Caching embeddings**
-   - Store embeddings to avoid recomputing
-   - Include model version in cache key
+## Performance Notes
 
-6. **Cosine vs dot product**
-   - Most models optimize for cosine similarity
-   - Normalize vectors if using dot product
+- **Voyage** models generally outperform OpenAI on retrieval benchmarks
+- **voyage-code-3** significantly better for code than general-purpose models
+- **Domain-specific** models (law, finance) worth the premium for those domains
+- **Gemini** embeddings are good value for free tier users

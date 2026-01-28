@@ -1,257 +1,185 @@
 # Coding Use Case Guide
 
-## Model Recommendations by Task
+## Model Recommendations
 
-| Task | Best Choice | Alternative | Budget |
-|------|-------------|-------------|--------|
-| **Agentic coding** | Claude Sonnet 4.5 | GPT-5.1-Codex | DeepSeek V3 |
-| **Code review** | Claude Opus 4.5 | GPT-4.1 | DeepSeek V3 |
-| **Quick edits** | Claude Haiku 4.5 | GPT-4.1-mini | DeepSeek Chat |
-| **Algorithm design** | o3 | Claude Opus 4.5 | DeepSeek R1 |
-| **Debugging** | Claude Sonnet 4.5 | GPT-4o | DeepSeek V3 |
-| **Code completion** | Claude Haiku 4.5 | GPT-4.1-nano | Codestral |
+### Agentic Coding (Long-running tasks, refactors, migrations)
+**Top Pick**: Claude Sonnet 4.5 or GPT-5.2-Codex
 
-## Benchmark Performance (SWE-bench Verified)
+| Model | SWE-bench | Best For |
+|-------|-----------|----------|
+| Claude Opus 4.5 | 80.9% | Most complex, multi-repo tasks |
+| GPT-5.2-Codex | ~78% | Long-horizon, Windows support |
+| Claude Sonnet 4.5 | 77.2% | Daily coding, best balance |
+| GPT-5.1-Codex-Max | 77.9% | Alternative to 5.2 |
 
-| Model | Score | Notes |
-|-------|-------|-------|
-| Claude Opus 4.5 | 80.9% | State-of-the-art |
-| GPT-5.1-Codex-Max | 77.9% | Best OpenAI |
-| Claude Sonnet 4.5 | 77.2% | Best value |
-| Claude Haiku 4.5 | 73.3% | Fast + capable |
-| DeepSeek V3.1 | ~71% | Budget champion |
-| Gemini 2.5 Pro | 63.8% | With custom agent |
+### Code Review & Analysis
+**Top Pick**: Claude Opus 4.5
 
-## Configuration by Task
+Opus excels at understanding architecture and catching subtle issues.
 
-### Agentic Coding (Claude Code, Cursor, etc.)
+### Quick Edits & Simple Tasks
+**Top Pick**: Claude Haiku 4.5 or GPT-4o-mini
 
-```python
-# Claude Sonnet 4.5 - recommended for most agentic work
-config = {
-    "model": "claude-sonnet-4-5-20250929",
-    "max_tokens": 16000,  # Allow long outputs for full files
-    "temperature": 0,     # Deterministic for code
-}
+Fast, cheap, good enough for simple changes.
 
-# For complex multi-file changes
-config_extended = {
-    "model": "claude-sonnet-4-5-20250929",
-    "max_tokens": 64000,
-    "thinking": {
-        "type": "enabled",
-        "budget_tokens": 10000
-    }
-}
-```
+### Budget Coding
+**Top Pick**: DeepSeek-chat
 
-### Code Review
+At $0.28/$0.42 per 1M tokens, it's 10x cheaper than alternatives with decent coding ability.
 
-```python
-# Claude Opus 4.5 for thorough reviews
-config = {
-    "model": "claude-opus-4-5-20251101",
-    "max_tokens": 8000,
-    "temperature": 0.2,  # Slight variation for insights
-    "effort": "high"     # Maximum attention
-}
+---
 
-# System prompt
-REVIEW_PROMPT = """You are a senior software engineer reviewing code.
-Focus on:
-1. Logic errors and edge cases
-2. Security vulnerabilities
-3. Performance issues
-4. Code style and readability
-5. Test coverage gaps
+## Tool Configurations
 
-Be specific and provide code examples for fixes."""
-```
-
-### Quick Edits / Completions
-
-```python
-# Claude Haiku 4.5 for speed
-config = {
-    "model": "claude-haiku-4-5-20251001",
-    "max_tokens": 2000,
-    "temperature": 0,
-}
-
-# GPT-4.1-nano for highest throughput
-config_openai = {
-    "model": "gpt-4.1-nano",
-    "max_tokens": 2000,
-    "temperature": 0,
-}
-```
-
-### Algorithm Design
-
-```python
-# OpenAI o3 for complex algorithms
-config = {
-    "model": "o3",
-    "max_completion_tokens": 16000,
-    "reasoning": {"effort": "high"},
-}
-# Note: No temperature support
-
-# Claude with extended thinking
-config_claude = {
-    "model": "claude-opus-4-5-20251101",
-    "max_tokens": 16000,
-    "thinking": {
-        "type": "enabled",
-        "budget_tokens": 20000
-    }
-}
-```
-
-## Language-Specific Notes
-
-### Python
-- All models perform well
-- Claude excels at type hints and modern Python
-- DeepSeek V3 surprisingly good for the price
-
-### JavaScript/TypeScript
-- Claude Sonnet 4.5 handles complex TS types well
-- GPT-4.1 good for React patterns
-- All support modern ESM syntax
-
-### Rust
-- Claude models lead on SWE-bench Multilingual
-- Ownership/borrow checker explanations are strong
-- Use extended thinking for complex lifetime issues
-
-### Go
-- All major models handle well
-- Claude good at idiomatic Go patterns
-
-### Low-level (C, C++, Assembly)
-- Claude Opus for complex memory management
-- o3 for optimization puzzles
-- Be explicit about target platform
-
-## Prompting Tips
-
-### 1. Be Explicit About Context
-
-```python
-CONTEXT_PROMPT = """
-Project: {project_name}
-Language: {language} {version}
-Framework: {framework}
-Build tool: {build_tool}
-Style guide: {style_guide}
-"""
-```
-
-### 2. Provide Examples
-
-```python
-EXAMPLE_PROMPT = """
-Follow this pattern for error handling:
-
-```python
-def process_data(data: Data) -> Result[ProcessedData, Error]:
-    if not data.is_valid():
-        return Err(ValidationError("Invalid data"))
-    
-    try:
-        result = transform(data)
-        return Ok(result)
-    except TransformError as e:
-        return Err(e)
-```
-"""
-```
-
-### 3. Request Specific Output
-
-```python
-OUTPUT_PROMPT = """
-Respond with:
-1. Brief explanation of the approach (2-3 sentences)
-2. Complete, runnable code
-3. Example usage
-4. Any edge cases to consider
-
-Do not include markdown code fences in your response.
-"""
-```
-
-## Cost Optimization
-
-### 1. Use the Right Model for the Task
-
-```python
-def select_coding_model(task_type: str, complexity: str):
-    if task_type == "completion" and complexity == "low":
-        return "claude-haiku-4-5-20251001"  # Fast, cheap
-    elif task_type == "review" and complexity == "high":
-        return "claude-opus-4-5-20251101"   # Thorough
-    else:
-        return "claude-sonnet-4-5-20250929" # Default balanced
-```
-
-### 2. Cache Common Operations
-
-```python
-# Use prompt caching for repeated system prompts
-system_prompt = {
-    "type": "text",
-    "text": LARGE_CODEBASE_CONTEXT,
-    "cache_control": {"type": "ephemeral"}
-}
-```
-
-### 3. Batch Similar Requests
-
-```python
-# Review multiple files in one request
-files_to_review = [file1_content, file2_content, file3_content]
-prompt = f"Review these {len(files_to_review)} files:\n\n" + \
-         "\n---\n".join(files_to_review)
-```
-
-## Tool Configuration
-
-### Claude Code
-
-```yaml
-# CLAUDE.md
-Model: claude-sonnet-4-5-20250929
-Temperature: 0
-Max tokens: 16000
-
-# For complex refactors
-Extended thinking: enabled
-Thinking budget: 10000
-```
-
-### Cursor
-
+### Claude Code / Cursor
 ```json
 {
   "model": "claude-sonnet-4-5-20250929",
-  "temperature": 0,
-  "maxTokens": 8000
+  "max_tokens": 16000,
+  "temperature": 0  // Claude 4.5 supports this
 }
 ```
 
-### Continue.dev
+For complex tasks, use extended thinking:
+```json
+{
+  "model": "claude-sonnet-4-5-20250929",
+  "thinking": {
+    "type": "enabled",
+    "budget_tokens": 10000
+  }
+}
+```
 
+### OpenAI Codex CLI
+```bash
+# Use GPT-5.2-Codex for best results
+codex --model gpt-5.2-codex
+
+# For complex tasks
+codex --model gpt-5.2 --reasoning-effort high
+```
+
+### Continue.dev / Other Tools
 ```json
 {
   "models": [
     {
-      "title": "Claude Sonnet",
+      "title": "Claude Sonnet 4.5",
       "provider": "anthropic",
-      "model": "claude-sonnet-4-5-20250929",
-      "apiKey": "..."
+      "model": "claude-sonnet-4-5-20250929"
+    },
+    {
+      "title": "GPT-5.2",
+      "provider": "openai", 
+      "model": "gpt-5.2"
     }
   ]
 }
 ```
+
+---
+
+## Best Practices
+
+### 1. Use Extended Thinking for Complex Tasks
+```javascript
+// Claude with extended thinking
+const response = await anthropic.messages.create({
+  model: "claude-sonnet-4-5-20250929",
+  max_tokens: 16000,
+  thinking: {
+    type: "enabled",
+    budget_tokens: 8000
+  },
+  messages: [{
+    role: "user",
+    content: "Refactor this module to use dependency injection..."
+  }]
+});
+```
+
+### 2. GPT-5.2 Reasoning Effort
+```javascript
+// Higher effort for harder problems
+const response = await fetch("https://api.openai.com/v1/responses", {
+  body: JSON.stringify({
+    model: "gpt-5.2-codex",
+    reasoning: { effort: "high" },  // none, low, medium, high, xhigh
+    input: [{ role: "user", content: "Complex coding task..." }]
+  })
+});
+```
+
+### 3. Opus 4.5 Effort Parameter
+```javascript
+// Control compute for Opus
+const response = await anthropic.messages.create({
+  model: "claude-opus-4-5-20251101",
+  effort: "medium",  // low, medium, high
+  max_tokens: 8000,
+  messages: [{ role: "user", content: "Architect this system..." }]
+});
+```
+
+---
+
+## Cost Comparison (per 1M tokens)
+
+| Model | Input | Output | Notes |
+|-------|-------|--------|-------|
+| Claude Sonnet 4.5 | $3.00 | $15.00 | Best value for quality |
+| Claude Opus 4.5 | $5.00 | $25.00 | When you need the best |
+| GPT-5.2-Codex | $1.75 | $14.00 | Good for long sessions |
+| Claude Haiku 4.5 | $1.00 | $5.00 | Quick edits |
+| DeepSeek-chat | $0.28 | $0.42 | Budget option |
+
+---
+
+## Coding Task Routing
+
+```javascript
+function selectCodingModel(task) {
+  if (task.complexity === 'simple' || task.type === 'quick-edit') {
+    return 'claude-haiku-4-5-20251001';
+  }
+  
+  if (task.complexity === 'high' || task.multiRepo || task.architecture) {
+    return 'claude-opus-4-5-20251101';
+  }
+  
+  if (task.longRunning || task.windows) {
+    return 'gpt-5.2-codex';
+  }
+  
+  // Default: best balance
+  return 'claude-sonnet-4-5-20250929';
+}
+```
+
+---
+
+## IDE Integration Examples
+
+### VS Code with Claude
+```json
+// settings.json
+{
+  "claude.model": "claude-sonnet-4-5-20250929",
+  "claude.maxTokens": 16000
+}
+```
+
+### Cursor Configuration
+```json
+{
+  "cursor.aiModel": "claude-sonnet-4-5-20250929",
+  "cursor.enableExtendedThinking": true
+}
+```
+
+### Codeium/Copilot Alternatives
+For budget setups, consider DeepSeek as a self-hosted option:
+- MIT license, free to run
+- Good coding performance
+- Requires significant GPU resources

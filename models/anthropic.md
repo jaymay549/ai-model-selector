@@ -1,258 +1,218 @@
-# Anthropic Claude Models Reference
+# Anthropic Claude Models
 
-> Last verified: January 2026
+## Claude 4.5 Family (Latest - November 2025)
 
-## Model Overview
+### Claude Opus 4.5
+**Model String**: `claude-opus-4-5-20251101` or `claude-opus-4.5`
+- **Context Window**: 200,000 tokens
+- **Max Output**: 64,000 tokens
+- **Knowledge Cutoff**: May 2025
+- **Pricing**: $5.00 / $25.00 per 1M tokens (input/output)
+- **Cache Write (5m)**: $6.25 / MTok
+- **Cache Write (1h)**: $10.00 / MTok
+- **Cache Read**: $0.50 / MTok
+- **Batch API**: $2.50 / $12.50 per 1M (50% off)
 
-| Model | Context | Max Output | Vision | Extended Thinking | Best For |
-|-------|---------|------------|--------|-------------------|----------|
-| **Claude Opus 4.5** | 200K | 64K | ✅ | ✅ | Frontier, complex reasoning |
-| **Claude Sonnet 4.5** | 200K (1M beta) | 64K | ✅ | ✅ | Coding, agents, balanced |
-| **Claude Haiku 4.5** | 200K | 64K | ✅ | ✅ | Fast, high-volume |
-| **Claude Sonnet 4** | 200K (1M beta) | 64K | ✅ | ✅ | Previous generation |
-| **Claude Opus 4.1** | 200K | 64K | ✅ | ✅ | Previous flagship |
-| **Claude Opus 4** | 200K | 64K | ✅ | ✅ | Legacy |
-
-## Model String Reference
-
-```python
-MODELS = {
-    # Claude 4.5 family (current)
-    "opus-4.5": "claude-opus-4-5-20251101",
-    "sonnet-4.5": "claude-sonnet-4-5-20250929",
-    "haiku-4.5": "claude-haiku-4-5-20251001",
-    
-    # Claude 4 family
-    "sonnet-4": "claude-sonnet-4-20250514",
-    "opus-4": "claude-opus-4-20250514",
-    "opus-4.1": "claude-opus-4-1-20250819",
-    
-    # Legacy 3.x (still available)
-    "sonnet-3.7": "claude-3-7-sonnet-20250219",
-    "sonnet-3.5": "claude-3-5-sonnet-20241022",
-    "haiku-3.5": "claude-3-5-haiku-20241022",
+**Unique Feature - Effort Parameter:**
+```javascript
+{
+  "model": "claude-opus-4-5-20251101",
+  "effort": "low" | "medium" | "high"  // Only Opus 4.5 supports this
 }
 ```
 
-## API Implementation
+Best for: Most complex tasks, deep reasoning, long-horizon coding, multi-agent coordination
 
-### Basic Chat
+**SWE-bench Verified**: 80.9% (state-of-the-art)
 
-```python
-import anthropic
+---
 
-client = anthropic.Anthropic()
+### Claude Sonnet 4.5
+**Model String**: `claude-sonnet-4-5-20250929` or `claude-sonnet-4.5`
+- **Context Window**: 200,000 tokens (1M beta available for tier 4)
+- **Max Output**: 64,000 tokens
+- **Knowledge Cutoff**: January 2025
+- **Pricing**: $3.00 / $15.00 per 1M tokens
 
-message = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
-    max_tokens=4096,
-    messages=[
-        {"role": "user", "content": "Hello, Claude!"}
-    ]
-)
+**Long Context Pricing (>200K tokens):**
+- Input: $6.00 / MTok
+- Output: $22.50 / MTok
 
-print(message.content[0].text)
-```
+**Cache Pricing:**
+- Cache Write (5m): $3.75 / MTok
+- Cache Write (1h): $6.00 / MTok
+- Cache Read: $0.30 / MTok
 
-### With System Prompt
+**Batch API**: $1.50 / $7.50 per 1M (50% off)
 
-```python
-message = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
-    max_tokens=4096,
-    system="You are a helpful coding assistant.",
-    messages=[
-        {"role": "user", "content": "Write a Python function"}
-    ]
-)
-```
+Best for: Coding, agentic workflows, balanced performance/cost
 
-### Streaming
+**SWE-bench Verified**: 77.2%
 
-```python
-with client.messages.stream(
-    model="claude-sonnet-4-5-20250929",
-    max_tokens=4096,
-    messages=[{"role": "user", "content": "Tell me a story"}]
-) as stream:
-    for text in stream.text_stream:
-        print(text, end="", flush=True)
-```
+---
 
-### Vision
+### Claude Haiku 4.5
+**Model String**: `claude-haiku-4-5-20251001` or `claude-haiku-4.5`
+- **Context Window**: 200,000 tokens
+- **Max Output**: 64,000 tokens
+- **Pricing**: $1.00 / $5.00 per 1M tokens
+- **Cache Write (5m)**: $1.25 / MTok
+- **Cache Write (1h)**: $2.00 / MTok
+- **Cache Read**: $0.10 / MTok
+- **Batch API**: $0.50 / $2.50 per 1M (50% off)
 
-```python
-import base64
+Best for: High-volume, low-latency tasks, real-time chat, classification
 
-with open("image.jpg", "rb") as f:
-    image_data = base64.standard_b64encode(f.read()).decode("utf-8")
+Near-frontier performance at 5x lower cost than Sonnet
 
-message = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
-    max_tokens=1024,
-    messages=[{
-        "role": "user",
-        "content": [
-            {
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": "image/jpeg",
-                    "data": image_data
-                }
-            },
-            {
-                "type": "text",
-                "text": "What's in this image?"
-            }
-        ]
-    }]
-)
-```
+---
 
-### Tool Use
+## Claude 4.x Family (Legacy - May 2025)
 
-```python
-tools = [{
-    "name": "get_weather",
-    "description": "Get the current weather in a location",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "location": {
-                "type": "string",
-                "description": "City and state, e.g. San Francisco, CA"
-            }
-        },
-        "required": ["location"]
-    }
-}]
+### Claude Opus 4.1 / Opus 4
+**Model Strings**: `claude-opus-4-1-20250822`, `claude-opus-4-20250522`
+- **Context Window**: 200,000 tokens
+- **Max Output**: 64,000 tokens
+- **Pricing**: $15.00 / $75.00 per 1M tokens (3x more expensive than 4.5!)
+- **Batch API**: $7.50 / $37.50 per 1M
 
-message = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
-    max_tokens=1024,
-    tools=tools,
-    messages=[{"role": "user", "content": "What's the weather in Paris?"}]
-)
+⚠️ **Recommendation**: Use Opus 4.5 instead - same or better quality at 66% lower cost
 
-# Check for tool use
-if message.stop_reason == "tool_use":
-    tool_use = next(b for b in message.content if b.type == "tool_use")
-    tool_name = tool_use.name
-    tool_input = tool_use.input
-    # Execute tool and continue conversation
-```
+### Claude Sonnet 4
+**Model String**: `claude-sonnet-4-20250514`
+- **Context Window**: 200,000 tokens (1M beta)
+- **Pricing**: $3.00 / $15.00 per 1M tokens
+- Same pricing as Sonnet 4.5
+
+---
+
+## Older Models (Still Available)
+
+### Claude Haiku 3.5
+**Model String**: `claude-3-5-haiku-20241022`
+- **Pricing**: $0.80 / $4.00 per 1M tokens
+
+### Claude Haiku 3
+**Model String**: `claude-3-haiku-20240307`
+- **Pricing**: $0.25 / $1.25 per 1M tokens
+- Budget champion for high-volume classification
+
+---
+
+## Key Features
 
 ### Extended Thinking
+Available on: Opus 4.5, Sonnet 4.5, Haiku 4.5, Opus 4, Opus 4.1, Sonnet 4
 
-```python
-# Enable extended thinking for complex reasoning
-message = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
-    max_tokens=16000,
-    thinking={
-        "type": "enabled",
-        "budget_tokens": 10000  # Max tokens for thinking
-    },
-    messages=[{"role": "user", "content": "Solve this complex problem..."}]
-)
-
-# Access thinking content
-for block in message.content:
-    if block.type == "thinking":
-        print(f"Thinking: {block.thinking}")
-    elif block.type == "text":
-        print(f"Response: {block.text}")
+```javascript
+{
+  "model": "claude-sonnet-4-5-20250929",
+  "thinking": {
+    "type": "enabled",
+    "budget_tokens": 10000  // minimum 1024
+  }
+}
 ```
 
-### Effort Parameter (Opus 4.5 only)
-
-```python
-# Control computational effort
-message = client.messages.create(
-    model="claude-opus-4-5-20251101",
-    max_tokens=4096,
-    extra_body={
-        "effort": "medium"  # low, medium, high
-    },
-    messages=[{"role": "user", "content": "Analyze this data..."}]
-)
-```
-
-## Pricing (per 1M tokens)
-
-| Model | Input | Output | Cache Write | Cache Read |
-|-------|-------|--------|-------------|------------|
-| **Opus 4.5** | $5.00 | $25.00 | $6.25 | $0.50 |
-| **Sonnet 4.5** | $3.00 | $15.00 | $3.75 | $0.30 |
-| **Haiku 4.5** | $1.00 | $5.00 | $1.25 | $0.10 |
-| **Sonnet 4.5 (>200K)** | $6.00 | $22.50 | - | - |
-
-## Special Features
-
-### 1M Token Context (Beta)
-```python
-# Available for Sonnet 4 and Sonnet 4.5
-# Requires beta header
-message = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
-    max_tokens=64000,
-    extra_headers={
-        "anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15"
-    },
-    messages=[{"role": "user", "content": very_long_document}]
-)
-```
+**Billing**: Thinking tokens billed as output tokens at standard rate
 
 ### Prompt Caching
-```python
-# Cache system prompts for repeated use
-message = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
-    max_tokens=1024,
-    system=[{
-        "type": "text",
-        "text": "You are a legal expert...",
-        "cache_control": {"type": "ephemeral"}  # 5-min cache
-    }],
-    messages=[{"role": "user", "content": "Review this contract"}]
-)
+Two cache durations available:
+- **5-minute cache**: 1.25x base input price to write, 0.1x to read
+- **1-hour cache**: 2x base input price to write, 0.1x to read
+
+Up to **90% savings** on repeated context!
+
+### Batch API
+50% discount on all tokens. 24-hour processing window.
+
+---
+
+## Code Examples
+
+### Standard Request
+```javascript
+import Anthropic from '@anthropic-ai/sdk';
+
+const anthropic = new Anthropic();
+
+const response = await anthropic.messages.create({
+  model: "claude-sonnet-4-5-20250929",
+  max_tokens: 4096,
+  messages: [
+    { role: "user", content: "Hello, Claude!" }
+  ]
+});
 ```
 
-### Context Awareness (4.5 models)
-Claude 4.5 models automatically track remaining context window capacity.
-
-### Batch API (50% discount)
-```python
-# Submit batch requests for async processing
-batch = client.batches.create(
-    requests=[
-        {"custom_id": "req1", "params": {...}},
-        {"custom_id": "req2", "params": {...}}
-    ]
-)
+### With Extended Thinking
+```javascript
+const response = await anthropic.messages.create({
+  model: "claude-opus-4-5-20251101",
+  max_tokens: 16000,
+  thinking: {
+    type: "enabled",
+    budget_tokens: 10000
+  },
+  messages: [
+    { role: "user", content: "Solve this complex problem..." }
+  ]
+});
 ```
 
-## Common Gotchas
+### With Prompt Caching
+```javascript
+const response = await anthropic.messages.create({
+  model: "claude-sonnet-4-5-20250929",
+  max_tokens: 4096,
+  system: [
+    {
+      type: "text",
+      text: "Your very long system prompt here...",
+      cache_control: { type: "ephemeral" }  // 5-minute cache
+    }
+  ],
+  messages: [
+    { role: "user", content: "Question about the cached context" }
+  ]
+});
+```
 
-1. **Max tokens is OUTPUT only**
-   - Unlike OpenAI, `max_tokens` only limits output
-   - Context window handles input
+### With Effort Parameter (Opus 4.5 only)
+```javascript
+const response = await anthropic.messages.create({
+  model: "claude-opus-4-5-20251101",
+  max_tokens: 8000,
+  effort: "medium",  // low, medium, high
+  messages: [
+    { role: "user", content: "Complex task..." }
+  ]
+});
+```
 
-2. **No temperature for extended thinking**
-   - Temperature fixed when thinking is enabled
+---
 
-3. **Long context pricing**
-   - Sonnet charges 2x for requests >200K input tokens
+## Model Selection Guide
 
-4. **Tool use response format**
-   - Stop reason is `tool_use`, not `function_call`
-   - Tool calls are in `content` array, not separate field
+| Use Case | Recommended Model | Reason |
+|----------|-------------------|--------|
+| Complex reasoning | Opus 4.5 | Best intelligence, effort control |
+| Coding (general) | Sonnet 4.5 | Best coding benchmarks, good cost |
+| Agentic workflows | Sonnet 4.5 | Excellent tool use, fast |
+| High-volume chat | Haiku 4.5 | Fast, cheap, near-frontier |
+| Budget classification | Haiku 3 | Cheapest option |
+| Long documents (1M) | Sonnet 4.5 (beta) | 1M context available |
 
-5. **Image token costs**
-   - Images consume tokens based on size
-   - ~1,600 tokens for a 1024x1024 image
+---
 
-6. **Haiku 4.5 vs Haiku 3.5**
-   - 4.5 is 25% more expensive but significantly more capable
-   - Consider for quality-sensitive high-volume workloads
+## Platform Availability
+
+All Claude models available on:
+- **Anthropic API** (direct)
+- **AWS Bedrock**
+- **Google Vertex AI**
+- **Microsoft Azure Foundry**
+
+**Regional vs Global Endpoints** (4.5 models):
+- Global: Standard pricing, dynamic routing
+- Regional: +10% premium, guaranteed data locality

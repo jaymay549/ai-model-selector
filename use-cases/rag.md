@@ -1,421 +1,290 @@
-# RAG (Retrieval-Augmented Generation) Guide
-
-## Quick Stack Recommendations
-
-| Use Case | Embedding | LLM | Vector DB |
-|----------|-----------|-----|-----------|
-| **General knowledge base** | Voyage 3-large | Claude Sonnet 4.5 | Pinecone/Qdrant |
-| **Code documentation** | Voyage Code 3 | Claude Sonnet 4.5 | Pinecone |
-| **Legal documents** | Voyage Law 2 | Claude Opus 4.5 | Weaviate |
-| **Budget/startup** | text-embedding-3-small | Claude Haiku 4.5 | Chroma |
-| **Self-hosted** | nomic-embed-text | Llama 3.3 | Milvus |
-| **Free tier testing** | Gemini embedding | Gemini 2.5 Flash | Chroma |
+# RAG Pipeline Guide
 
 ## Embedding Selection
 
-### By Domain
+### General Purpose
+| Model | Quality | Price/1M | Dimensions | Context |
+|-------|---------|----------|------------|---------|
+| voyage-3.5 | ⭐⭐⭐⭐⭐ | $0.06 | 256-2048 | 32K |
+| voyage-3-large | ⭐⭐⭐⭐⭐ | $0.06 | 256-2048 | 32K |
+| text-embedding-3-large | ⭐⭐⭐⭐ | $0.13 | 256-3072 | 8K |
+| text-embedding-3-small | ⭐⭐⭐ | $0.02 | 512-1536 | 8K |
+| gemini-embedding-001 | ⭐⭐⭐ | Free | 768-3072 | Large |
 
-| Domain | Model | Why |
-|--------|-------|-----|
-| **General** | Voyage 3-large | Best MTEB scores |
-| **Code** | Voyage Code 3 | 13.8% better than OpenAI on code |
-| **Legal** | Voyage Law 2 | Domain-optimized |
-| **Finance** | Voyage Finance 2 | Domain-optimized |
-| **Multilingual** | Voyage 3-large | Strong on 100+ languages |
-| **Budget** | text-embedding-3-small | $0.02/1M, good enough |
+### Code-Specific
+| Model | Quality | Price/1M | Best For |
+|-------|---------|----------|----------|
+| voyage-code-3 | ⭐⭐⭐⭐⭐ | $0.06 | Code search, docs |
 
-### Configuration
+### Domain-Specific
+| Model | Domain | Price/1M |
+|-------|--------|----------|
+| voyage-law-2 | Legal | ~$0.12 |
+| voyage-finance-2 | Finance | ~$0.12 |
 
-```python
-# Voyage - best quality
-VOYAGE_CONFIG = {
-    "model": "voyage-3-large",
-    "input_type": "document",  # or "query" for search
-    "output_dimension": 1024,  # Can reduce for storage
-}
-
-# OpenAI - widely available
-OPENAI_CONFIG = {
-    "model": "text-embedding-3-large",
-    "dimensions": 1024,  # Reduce from 3072
-}
-
-# Budget option
-BUDGET_CONFIG = {
-    "model": "text-embedding-3-small",
-    "dimensions": 512,  # Reduce from 1536
-}
-```
-
-## Chunking Strategy
-
-### Chunk Sizes by Content Type
-
-| Content Type | Chunk Size | Overlap | Notes |
-|--------------|------------|---------|-------|
-| **Documentation** | 512 tokens | 50 | Preserve sections |
-| **Code** | 256-512 | 0 | Chunk by function/class |
-| **Legal** | 1024 | 100 | Preserve paragraph context |
-| **Chat logs** | 256 | 0 | Per message/exchange |
-| **Research papers** | 512 | 50 | Preserve citations |
-
-### Implementation
-
-```python
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-# General purpose
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=512,
-    chunk_overlap=50,
-    separators=["\n\n", "\n", ". ", " ", ""]
-)
-
-# For code
-code_splitter = RecursiveCharacterTextSplitter.from_language(
-    language="python",
-    chunk_size=500,
-    chunk_overlap=0
-)
-
-# For markdown
-md_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=512,
-    chunk_overlap=50,
-    separators=["\n## ", "\n### ", "\n\n", "\n", " "]
-)
-```
+---
 
 ## LLM Selection for RAG
 
-### By Task
+### Question Answering
+| Model | Best For | Price |
+|-------|----------|-------|
+| Claude Sonnet 4.5 | Accurate answers, citations | $3/$15 |
+| Gemini 2.5 Flash | Fast responses, long context | $0.30/$2.50 |
+| Claude Haiku 4.5 | High-volume Q&A | $1/$5 |
 
-| Task | Model | Config |
-|------|-------|--------|
-| **Q&A** | Claude Sonnet 4.5 | temp=0 |
-| **Summarization** | Claude Haiku 4.5 | temp=0.3 |
-| **Analysis** | Claude Opus 4.5 | thinking enabled |
-| **High volume** | Claude Haiku 4.5 | temp=0 |
-| **Complex reasoning** | Claude Opus 4.5 | effort=high |
+### Document Analysis
+| Model | Best For | Price |
+|-------|----------|-------|
+| Claude Opus 4.5 | Deep analysis | $5/$25 |
+| GPT-5.2 | Complex reasoning | $1.75/$14 |
+| Gemini 2.5 Pro | Very long docs (1M) | $1.25/$10 |
 
-### RAG Prompt Template
+### High-Volume/Budget
+| Model | Best For | Price |
+|-------|----------|-------|
+| DeepSeek-chat | Budget RAG | $0.28/$0.42 |
+| Gemini 2.5 Flash-Lite | Cheapest | $0.10/$0.40 |
 
-```python
-RAG_PROMPT = """Answer the question based on the provided context.
-
-Context:
-{context}
-
-Question: {question}
-
-Instructions:
-- Only use information from the context
-- If the context doesn't contain the answer, say so
-- Cite specific sections when possible
-- Be concise but complete
-
-Answer:"""
-```
-
-### Citation-Aware Prompt
-
-```python
-CITATION_PROMPT = """Answer with citations from the provided documents.
-
-Documents:
-{documents}
-
-Question: {question}
-
-Format your response as:
-[Your answer here]
-
-Sources:
-- [1] Document title, relevant quote
-- [2] Document title, relevant quote
-
-If no documents support your answer, state that clearly."""
-```
+---
 
 ## Complete RAG Pipeline
 
-### Setup
+### 1. Indexing Phase
 
-```python
-import voyageai
-import anthropic
-from qdrant_client import QdrantClient
-
-# Initialize clients
-voyage = voyageai.Client()
-claude = anthropic.Anthropic()
-qdrant = QdrantClient(url="http://localhost:6333")
-
-COLLECTION = "knowledge_base"
-EMBEDDING_MODEL = "voyage-3-large"
-LLM_MODEL = "claude-sonnet-4-5-20250929"
+```javascript
+// Using Voyage AI (best quality)
+async function embedDocuments(documents) {
+  const response = await fetch('https://api.voyageai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${VOYAGE_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'voyage-3.5',
+      input: documents.map(d => d.text),
+      input_type: 'document',
+      output_dimension: 1024  // Reduce for storage savings
+    })
+  });
+  
+  const data = await response.json();
+  return data.embeddings;
+}
 ```
 
-### Indexing
-
-```python
-def index_documents(documents: list[dict]):
-    """Index documents with metadata."""
-    
-    # Extract text for embedding
-    texts = [doc["content"] for doc in documents]
-    
-    # Generate embeddings
-    result = voyage.embed(
-        texts=texts,
-        model=EMBEDDING_MODEL,
-        input_type="document"
-    )
-    
-    # Upsert to vector DB
-    points = [
-        {
-            "id": i,
-            "vector": result.embeddings[i],
-            "payload": {
-                "content": doc["content"],
-                "title": doc.get("title", ""),
-                "source": doc.get("source", ""),
-                "metadata": doc.get("metadata", {})
-            }
-        }
-        for i, doc in enumerate(documents)
-    ]
-    
-    qdrant.upsert(collection_name=COLLECTION, points=points)
+```javascript
+// Using OpenAI (alternative)
+async function embedDocuments(documents) {
+  const response = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: documents.map(d => d.text),
+    dimensions: 1024
+  });
+  
+  return response.data.map(d => d.embedding);
+}
 ```
 
-### Retrieval
+### 2. Query Phase
 
-```python
-def retrieve(query: str, top_k: int = 5) -> list[dict]:
-    """Retrieve relevant documents."""
-    
-    # Embed query (note: input_type="query")
-    query_embedding = voyage.embed(
-        texts=[query],
-        model=EMBEDDING_MODEL,
-        input_type="query"
-    ).embeddings[0]
-    
-    # Search
-    results = qdrant.search(
-        collection_name=COLLECTION,
-        query_vector=query_embedding,
-        limit=top_k
-    )
-    
-    return [
-        {
-            "content": hit.payload["content"],
-            "title": hit.payload.get("title", ""),
-            "score": hit.score
-        }
-        for hit in results
-    ]
+```javascript
+async function embedQuery(query) {
+  const response = await fetch('https://api.voyageai.com/v1/embeddings', {
+    body: JSON.stringify({
+      model: 'voyage-3.5',
+      input: [query],
+      input_type: 'query'  // Important: specify query type
+    })
+  });
+  
+  return response.json();
+}
 ```
 
-### Generation
+### 3. Retrieval Phase
 
-```python
-def generate_answer(query: str, context_docs: list[dict]) -> str:
-    """Generate answer from retrieved context."""
-    
-    # Format context
-    context = "\n\n---\n\n".join([
-        f"[{i+1}] {doc['title']}\n{doc['content']}"
-        for i, doc in enumerate(context_docs)
-    ])
-    
-    prompt = RAG_PROMPT.format(context=context, question=query)
-    
-    response = claude.messages.create(
-        model=LLM_MODEL,
-        max_tokens=2000,
-        temperature=0,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    
-    return response.content[0].text
+```javascript
+async function retrieveRelevant(queryEmbedding, vectorStore, topK = 5) {
+  // Using your vector database (Pinecone, Weaviate, pgvector, etc.)
+  const results = await vectorStore.query({
+    vector: queryEmbedding,
+    topK: topK,
+    includeMetadata: true
+  });
+  
+  return results.matches;
+}
 ```
 
-### Complete Query
+### 4. Generation Phase
 
-```python
-def rag_query(query: str) -> str:
-    """Full RAG pipeline."""
-    
-    # 1. Retrieve
-    docs = retrieve(query, top_k=5)
-    
-    # 2. Filter by relevance score
-    relevant_docs = [d for d in docs if d["score"] > 0.7]
-    
-    if not relevant_docs:
-        return "I couldn't find relevant information to answer this question."
-    
-    # 3. Generate
-    answer = generate_answer(query, relevant_docs)
-    
-    return answer
+```javascript
+async function generateAnswer(query, context) {
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 2000,
+    system: `You are a helpful assistant. Answer based on the provided context.
+    If the answer isn't in the context, say so.`,
+    messages: [{
+      role: 'user',
+      content: `Context:
+${context.map(c => c.text).join('\n\n')}
+
+Question: ${query}`
+    }]
+  });
+  
+  return response.content[0].text;
+}
 ```
+
+---
 
 ## Advanced Patterns
 
-### Hybrid Search (Dense + Sparse)
-
-```python
-from qdrant_client.models import models
-
-def hybrid_search(query: str, top_k: int = 5):
-    # Dense embedding
-    dense_vector = voyage.embed(
-        texts=[query],
-        model="voyage-3-large",
-        input_type="query"
-    ).embeddings[0]
-    
-    # Sparse (BM25-style) - if supported by your vector DB
-    results = qdrant.search(
-        collection_name=COLLECTION,
-        query_vector=dense_vector,
-        query_filter=models.Filter(
-            must=[
-                models.FieldCondition(
-                    key="content",
-                    match=models.MatchText(text=query)  # Keyword match
-                )
-            ]
-        ),
-        limit=top_k
-    )
-    
-    return results
+### Hybrid Search (Vector + Keyword)
+```javascript
+async function hybridSearch(query, vectorStore) {
+  // Vector search
+  const vectorResults = await vectorStore.query({
+    vector: await embedQuery(query),
+    topK: 10
+  });
+  
+  // Keyword search (BM25)
+  const keywordResults = await keywordStore.search(query, { topK: 10 });
+  
+  // Combine with RRF (Reciprocal Rank Fusion)
+  return reciprocalRankFusion([vectorResults, keywordResults]);
+}
 ```
 
 ### Reranking
-
-```python
-import cohere
-
-co = cohere.Client()
-
-def retrieve_and_rerank(query: str, top_k: int = 5):
-    # Get more candidates than needed
-    candidates = retrieve(query, top_k=20)
-    
-    # Rerank
-    reranked = co.rerank(
-        model="rerank-english-v3.0",
-        query=query,
-        documents=[c["content"] for c in candidates],
-        top_n=top_k
-    )
-    
-    # Return top reranked
-    return [candidates[r.index] for r in reranked.results]
+```javascript
+// Using Voyage reranker
+async function rerank(query, documents) {
+  const response = await fetch('https://api.voyageai.com/v1/rerank', {
+    body: JSON.stringify({
+      model: 'rerank-2.5',
+      query: query,
+      documents: documents.map(d => d.text),
+      top_k: 5
+    })
+  });
+  
+  return response.json();
+}
 ```
 
 ### Query Expansion
+```javascript
+async function expandQuery(originalQuery) {
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',  // Fast, cheap
+    max_tokens: 200,
+    messages: [{
+      role: 'user',
+      content: `Generate 3 alternative phrasings of this search query:
+"${originalQuery}"
 
-```python
-def expand_query(query: str) -> list[str]:
-    """Generate multiple query variations."""
-    
-    response = claude.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=500,
-        messages=[{
-            "role": "user",
-            "content": f"""Generate 3 alternative phrasings of this search query.
-Return only the queries, one per line.
-
-Query: {query}"""
-        }]
-    )
-    
-    variations = response.content[0].text.strip().split("\n")
-    return [query] + variations[:3]
-
-def multi_query_retrieve(query: str, top_k: int = 5):
-    """Retrieve using multiple query variations."""
-    
-    queries = expand_query(query)
-    all_results = []
-    seen_ids = set()
-    
-    for q in queries:
-        results = retrieve(q, top_k=top_k)
-        for r in results:
-            if r["id"] not in seen_ids:
-                all_results.append(r)
-                seen_ids.add(r["id"])
-    
-    # Sort by score and return top_k
-    return sorted(all_results, key=lambda x: x["score"], reverse=True)[:top_k]
+Return only the queries, one per line.`
+    }]
+  });
+  
+  const variations = response.content[0].text.split('\n');
+  return [originalQuery, ...variations];
+}
 ```
+
+---
+
+## Chunking Strategies
+
+### Fixed Size
+```javascript
+function fixedSizeChunk(text, chunkSize = 512, overlap = 50) {
+  const chunks = [];
+  for (let i = 0; i < text.length; i += chunkSize - overlap) {
+    chunks.push(text.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+```
+
+### Semantic Chunking
+```javascript
+// Use sentence boundaries + embedding similarity
+function semanticChunk(text, maxTokens = 512) {
+  const sentences = text.split(/[.!?]+/);
+  const chunks = [];
+  let currentChunk = [];
+  let currentTokens = 0;
+  
+  for (const sentence of sentences) {
+    const sentenceTokens = estimateTokens(sentence);
+    if (currentTokens + sentenceTokens > maxTokens) {
+      chunks.push(currentChunk.join(' '));
+      currentChunk = [sentence];
+      currentTokens = sentenceTokens;
+    } else {
+      currentChunk.push(sentence);
+      currentTokens += sentenceTokens;
+    }
+  }
+  
+  if (currentChunk.length) chunks.push(currentChunk.join(' '));
+  return chunks;
+}
+```
+
+---
 
 ## Cost Optimization
 
-### 1. Embedding Caching
+### Embedding Costs
+```
+10,000 documents × 500 tokens = 5M tokens
 
-```python
-import hashlib
-import redis
-
-cache = redis.Redis()
-
-def get_embedding(text: str) -> list[float]:
-    # Check cache
-    key = hashlib.md5(text.encode()).hexdigest()
-    cached = cache.get(f"emb:{key}")
-    
-    if cached:
-        return json.loads(cached)
-    
-    # Generate and cache
-    embedding = voyage.embed(texts=[text], model="voyage-3-large").embeddings[0]
-    cache.setex(f"emb:{key}", 86400, json.dumps(embedding))  # 24h TTL
-    
-    return embedding
+voyage-3.5:              $0.30 (5M × $0.06/1M)
+text-embedding-3-small:  $0.10 (5M × $0.02/1M)
+gemini-embedding-001:    $0.00 (free tier)
 ```
 
-### 2. Dimension Reduction
+### Generation Costs (per 1000 queries)
+```
+Assuming 2000 context tokens + 500 output tokens per query:
 
-```python
-# Reduce dimensions for storage savings
-DIMENSION_CONFIGS = {
-    "high_quality": 1024,   # Best retrieval
-    "balanced": 512,        # Good tradeoff
-    "storage_optimized": 256  # 4x smaller, slight quality loss
+Claude Sonnet 4.5: ~$37.50 (2M × $3 + 0.5M × $15)
+Claude Haiku 4.5:  ~$4.50  (2M × $1 + 0.5M × $5)
+DeepSeek:          ~$0.77  (2M × $0.28 + 0.5M × $0.42)
+```
+
+### Storage Optimization
+```javascript
+// Reduce dimensions to save vector storage
+{
+  model: 'voyage-3.5',
+  output_dimension: 512  // vs default 2048
 }
 
-embedding = voyage.embed(
-    texts=[text],
-    model="voyage-3-large",
-    output_dimension=DIMENSION_CONFIGS["balanced"]
-).embeddings[0]
+// Use quantization
+{
+  model: 'voyage-3.5',
+  output_dtype: 'int8'  // 4x smaller than float32
+}
 ```
 
-### 3. Tiered Retrieval
+---
 
-```python
-def tiered_rag(query: str):
-    """Use cheaper model first, upgrade if needed."""
-    
-    # Fast retrieval with Haiku
-    docs = retrieve(query, top_k=3)
-    
-    if all(d["score"] > 0.85 for d in docs):
-        # High confidence - use Haiku
-        return generate_answer(query, docs, model="claude-haiku-4-5-20251001")
-    else:
-        # Lower confidence - use Sonnet with more docs
-        docs = retrieve(query, top_k=7)
-        return generate_answer(query, docs, model="claude-sonnet-4-5-20250929")
-```
+## Model Selection Matrix
+
+| Scenario | Embeddings | LLM | Reason |
+|----------|------------|-----|--------|
+| Quality focus | voyage-3.5 | Sonnet 4.5 | Best retrieval + generation |
+| Budget | text-embedding-3-small | DeepSeek | Cheapest viable |
+| High volume | voyage-3.5-lite | Haiku 4.5 | Fast + cheap |
+| Long docs | voyage-3.5 | Gemini 2.5 Pro | 1M context |
+| Code RAG | voyage-code-3 | Sonnet 4.5 | Optimized for code |
+| Free tier | gemini-embedding | Gemini Flash | No cost |
