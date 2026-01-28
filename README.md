@@ -29,17 +29,17 @@ A comprehensive guide to AI model selection and API implementation for AI coding
 
 ### With npx skills (Vercel)
 ```bash
-npx skills add YOUR_USERNAME/ai-model-selector
+npx skills add jaymay549/ai-model-selector
 ```
 
 ### With skild
 ```bash
-skild install YOUR_USERNAME/ai-model-selector
+skild install jaymay549/ai-model-selector
 ```
 
 ### With Claude Code
 ```bash
-/plugin marketplace add YOUR_USERNAME/ai-model-selector
+/plugin marketplace add jaymay549/ai-model-selector
 ```
 
 ### Manual
